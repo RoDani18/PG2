@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+*.sqlite
+*.db
+
+# Node/React
+node_modules/
+build/
+
+# Modelos grandes
+vosk-model-es-0.42/

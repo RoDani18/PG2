@@ -1,0 +1,16 @@
+import psycopg2
+
+def conectar():
+    return psycopg2.connect(
+        host="localhost",
+        database="asistente_IA",
+        user="postgres",
+        password="admin123"  # o el que tú tengas
+    )
+
+try:
+    conn = conectar()
+    print("✅ Conexión exitosa a la base de datos.")
+    conn.close()
+except Exception as e:
+    print("❌ Error de conexión:", e)
