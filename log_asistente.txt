@@ -1,0 +1,40 @@
+[Reconocido] hola soy tu asistente qué puedo hacer por ti hoy
+[Intención] consultar_inventario
+[Respuesta] No entendí ese comando con claridad. ¿Puedes repetirlo?
+----------------------------------------
+[Reconocido] consultar inventario
+[Intención] consultar_inventario
+[Respuesta] No se pudo conectar al sistema de inventario.
+----------------------------------------
+[Reconocido] consultar inventario
+[Intención] consultar_inventario
+[Respuesta] No se pudo conectar al sistema de inventario.
+----------------------------------------
+[Reconocido] agregar el producto
+[Intención] agregar_producto
+[Respuesta] No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+----------------------------------------
+[Reconocido] agregar pepsi precio cuarenta cantidad de cincuenta
+[Intención] agregar_producto
+[Respuesta] No entendí ese comando con claridad. ¿Puedes repetirlo?
+----------------------------------------
+[Reconocido] salir del programa
+[Intención] salir
+[Respuesta] Hasta luego. Cerrando el asistente.
+----------------------------------------
+[Reconocido] consultar inventario
+[Intención] consultar_inventario
+[Respuesta] Parece que el sistema de inventario está apagado o no disponible.
+----------------------------------------
+[Reconocido] agregar producto ayuda
+[Intención] agregar_producto
+[Respuesta] No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+----------------------------------------
+[Reconocido] agregar producto
+[Intención] agregar_producto
+[Respuesta] No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+----------------------------------------
+[Reconocido] salir del programa ha pasado
+[Intención] salir
+[Respuesta] Hasta luego. Cerrando el asistente.
+----------------------------------------

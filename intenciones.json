@@ -1,0 +1,105 @@
+{
+  "intenciones": [
+    {
+      "tag": "agregar_producto",
+      "patrones": [
+        "agrega un nuevo producto",
+        "añadir producto",
+        "insertar artículo nuevo",
+        "nuevo producto",
+        "registra un producto", 
+        "agrega coca cola precio veinte cantidad cinco",
+        "coca cola precio treinta cantidad cinco",
+        "producto manzanas precio diez cantidad diez",
+        "añadir jabón precio quince cantidad cuatro", 
+        "agregar producto coca cola precio veinte cantidad cinco",
+        "agrega producto pepsi precio diez cantidad diez",
+        "añadir producto agua precio cinco cantidad veinte",
+        "insertar producto galletas precio quince cantidad ocho",
+        "coca cola precio 20 cantidad 5",
+        "pepsi precio cuatro cantidad cuarenta",
+        "nuevo producto yogurt precio ocho cantidad doce",
+        "añadir pan precio diez cantidad cinco"
+      ],
+      "respuestas": [
+        "Producto agregado con éxito.",
+        "He registrado el nuevo producto."
+      ]
+    },
+    {
+      "tag": "consultar_inventario",
+      "patrones": [
+        "muéstrame el inventario",
+        "ver productos disponibles",
+        "consultar el inventario",
+        "mostrar lista de productos",
+        "consultar inventarios",
+        "mostrar inventarios",
+        "ver inventarios",
+        "lista de inventarios", 
+        "consultar inventario",
+        "mostrar inventario",
+        "ver productos",
+        "qué hay en inventario",
+        "lista de productos"
+      ],
+      "respuestas": [
+        "Aquí está el inventario actual.",
+        "Estos son los productos disponibles."
+      ]
+    },
+    {
+      "tag": "saludo",
+      "patrones": [
+        "hola",
+        "buenos días",
+        "buenas tardes",
+        "hey asistente"
+      ],
+      "respuestas": [
+        "Hola, ¿en qué puedo ayudarte?",
+        "Saludos, listo para asistirte."
+      ]
+    },
+    {
+      "tag": "despedida",
+      "patrones": [
+        "salir",
+        "salir del programa",
+        "cerrar programa",
+        "terminar",
+        "finalizar",
+        "apagar asistente",
+        "detente"
+      ],
+      "respuestas": [
+        "Hasta luego.",
+        "Fue un placer ayudarte."
+      ]
+    },
+    {
+      "tag": "afirmacion",
+      "patrones": ["sí", "claro", "confirmo", "correcto"],
+      "respuestas": ["Confirmado."]
+    },
+    {
+      "tag": "negacion",
+      "patrones": ["no", "cancela", "mejor no", "detente"],
+      "respuestas": ["Cancelado."]
+    },
+    {
+      "tag": "agregar_pedido",
+      "patrones": [
+        "agregar pedido",
+        "añadir pedido",
+        "registrar pedido",
+        "nuevo pedido",
+        "realizar un pedido"
+      ],
+      "respuestas": [
+        "Pedido registrado.",
+        "He agregado el pedido."
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-from conexion import conectar
+from db.conexion import conectar
 
 def agregar_producto(nombre, cantidad):
     try:

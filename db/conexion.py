@@ -3,7 +3,7 @@ import psycopg2
 def conectar():
     return psycopg2.connect(
         host="localhost",
-        database="asistente_IA",
+        database="asistentePG",
         user="postgres",
         password="admin123"  # o el que tú tengas
     )
