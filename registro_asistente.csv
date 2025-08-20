@@ -1,0 +1,4 @@
+timestamp,usuario,intencion,respuesta
+2025-08-12 22:59:34,inventario,consultar_inventario,No reconozco esa acción. Intenta de nuevo.
+2025-08-15 22:15:14,consultar inventario,consultar_inventario,No reconozco esa acción. Intenta de nuevo.
+2025-08-15 22:15:24,agrega el producto,agregar_producto,No reconozco esa acción. Intenta de nuevo.

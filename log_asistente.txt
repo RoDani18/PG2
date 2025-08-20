@@ -38,3 +38,606 @@
 [Intención] salir
 [Respuesta] Hasta luego. Cerrando el asistente.
 ----------------------------------------
+Usuario: consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: víctima
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: víctima
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: víctima
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: víctima
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: parece que consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: parece que consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: parece que consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: parece que consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: es que mentira esto permitirá la frase que estoy hablando en donde
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: es que mentira esto permitirá la frase que estoy hablando en donde
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: es que mentira esto permitirá la frase que estoy hablando en donde
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: es que mentira esto permitirá la frase que estoy hablando en donde
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: cabe mencionar al siglo te lo entendí pero no queda la frase que leí
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: cabe mencionar al siglo te lo entendí pero no queda la frase que leí
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: cabe mencionar al siglo te lo entendí pero no queda la frase que leí
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: cabe mencionar al siglo te lo entendí pero no queda la frase que leí
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: nacen acuerdos de la emergencia
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: nacen acuerdos de la emergencia
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: nacen acuerdos de la emergencia
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: nacen acuerdos de la emergencia
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: no creo
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: no creo
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: no creo
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: no creo
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: salir del programa
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================
+Usuario: salir del programa
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================
+Usuario: tocarla
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: consultar inventario
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: okay
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: okay es experimental
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: pero no me la consulta
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: okay es pueden vital
+Intención: consultar_inventario
+Asistente: Parece que el sistema de inventario está apagado o no disponible.
+========================================
+Usuario: salir del programa
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: nuestro asistente activado
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: te amo de que yo le digo algo entonces ahí se dan cuenta parece consultar inventario y me parece poca cola cuarentonas yo lo era la bandera la base de datos que es esta que yo tengo por acá entonces aquí lo va a colocar inventario
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y lo voy a correr acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: moussa
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: coca-cola y cantidad cuarenta aquí puedo ver sigue leyendo un montón de cosas se a veces tiene como cabo guiarse limón el modelo pero de las cosas el optimizando poco a poco entonces ahí va le voy hablando ya le voy hablando y ya se le han visto las intenciones y aquí en la parte del
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: baten pues yo me voy acá en esta parte de la capa me voy a ir a
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: a la parte de google y acá lo que hace es que va a afectar la guerrilla mediocampo
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: entonces acá lo de acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: entonces acá lo de acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: entonces acá lo de acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: entonces acá lo de acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: entonces acá lo de acá
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y acá me va leyendo si si está de acuerdo o no aquí si le hago un inventario por ejemplo me tiré al inventar en esta parte entonces ahorita lo que yo estoy haciendo es intentando puedes seguir entrenando al asistente para que no pase eso de que a veces como que se googlea si se dan cuenta pues mentira una parte que
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y acá me va leyendo si si está de acuerdo o no aquí si le hago un inventario por ejemplo me tiré al inventar en esta parte entonces ahorita lo que yo estoy haciendo es intentando puedes seguir entrenando al asistente para que no pase eso de que a veces como que se googlea si se dan cuenta pues mentira una parte que
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y acá me va leyendo si si está de acuerdo o no aquí si le hago un inventario por ejemplo me tiré al inventar en esta parte entonces ahorita lo que yo estoy haciendo es intentando puedes seguir entrenando al asistente para que no pase eso de que a veces como que se googlea si se dan cuenta pues mentira una parte que
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y acá me va leyendo si si está de acuerdo o no aquí si le hago un inventario por ejemplo me tiré al inventar en esta parte entonces ahorita lo que yo estoy haciendo es intentando puedes seguir entrenando al asistente para que no pase eso de que a veces como que se googlea si se dan cuenta pues mentira una parte que
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: y acá me va leyendo si si está de acuerdo o no aquí si le hago un inventario por ejemplo me tiré al inventar en esta parte entonces ahorita lo que yo estoy haciendo es intentando puedes seguir entrenando al asistente para que no pase eso de que a veces como que se googlea si se dan cuenta pues mentira una parte que
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: dice la confianza esa línea verde que dice hay que la confianza el asistente padece me está leyendo bien sino me está leyendo bien entonces se encuentra enmarcada de decir tú dijistes te saeta lo que falta por hacer es seguir entrenándolo para que no pase eso uganda
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: dice la confianza esa línea verde que dice hay que la confianza el asistente padece me está leyendo bien sino me está leyendo bien entonces se encuentra enmarcada de decir tú dijistes te saeta lo que falta por hacer es seguir entrenándolo para que no pase eso uganda
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: dice la confianza esa línea verde que dice hay que la confianza el asistente padece me está leyendo bien sino me está leyendo bien entonces se encuentra enmarcada de decir tú dijistes te saeta lo que falta por hacer es seguir entrenándolo para que no pase eso uganda
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: dice la confianza esa línea verde que dice hay que la confianza el asistente padece me está leyendo bien sino me está leyendo bien entonces se encuentra enmarcada de decir tú dijistes te saeta lo que falta por hacer es seguir entrenándolo para que no pase eso uganda
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: dice la confianza esa línea verde que dice hay que la confianza el asistente padece me está leyendo bien sino me está leyendo bien entonces se encuentra enmarcada de decir tú dijistes te saeta lo que falta por hacer es seguir entrenándolo para que no pase eso uganda
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: la acción y también en la parte que me lo devuelva por boyacá al principio pues me da una bienvenida por vos entonces ya después ya y la parte también de visual del asistente salir en el programa entonces hay oli que saliera del programa y pues como le digo ahí está ese güey
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================
+Usuario: consulta el inventario
+Intención: consultar_inventario
+Asistente: Esto es lo que hay en inventario:
+- coca cola: 40 unidades
+
+========================================
+Usuario: área de producto guacolda cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi cuarenta cincuenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: agregar producto pepsi precio cinco cantidad cincuenta
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: para salir del programa
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================
+Usuario: otra asistente activado puedes comenzar a hablar
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: de inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: de inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: de inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: de inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: de inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: arga producto pepsi precio ocho unidades cuarenta
+Intención: agregar_producto
+Asistente: ¿Quieres agregar Pepsi con 40 unidades?
+========================================
+Usuario: chévere agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: chévere agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: chévere agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: chévere agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: chévere agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: periódico garantizado las bolsas de basura en pareja actual alcohol
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: del mismo modo
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: no es que haya en la iglesia una vez
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: girona rock le otorga la suya fueron otros productos nativos de todos lo vimos
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: excelente residuo mezclarse martes veintiuno cuarenta y cinco días no hay estudios de méxico argentina me dejan hablar para probar esto por favor y el inglés moors
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: esta es llamada lanning nos habla pues habla de las cosas de tu máquina que más tienen que hablar a la a la mujer a viajan a agregar
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: habla en alemán
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: se agrega al producto pepsi precio ocho cantidad cuarenta
+Intención: agregar_producto
+Asistente: ¿Quieres agregar Pepsi con 40 unidades?
+========================================
+Usuario: agregada producto pepsi precio ocho cantidad cuarenta
+Intención: agregar_producto
+Asistente: ¿Quieres agregar Pepsi con 40 unidades?
+========================================
+Usuario: entregando
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: gracias
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: sí
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: missouri
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: sí
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: si agrega el producto pepsi
+Intención: agregar_producto
+Asistente: No entendí bien el producto. Intenta decir nombre, precio y cantidad.
+========================================
+Usuario: la droga producto pepsi cantidad cuarenta precio ocho
+Intención: agregar_producto
+Asistente: ¿Quieres agregar Pepsi con 40 unidades?
+========================================
+Usuario: sí
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: sí
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: consultar inventario
+Intención: consultar_inventario
+Asistente: 📦 Inventario actual:
+- coca cola: 40 unidades, Q0.00 cada uno
+========================================
+Usuario: cantidad cuarenta x
+Intención: salir
+Asistente: Saliendo del programa. Hasta luego.
+========================================

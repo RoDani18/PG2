@@ -6,6 +6,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import queue
 import json
+import numpy as np
 import random
 import re
 import sys
@@ -13,33 +14,87 @@ import requests
 import time
 import sounddevice as sd
 import pyttsx3
+import requests
+import csv
+from backend.offline import fallback
 from vosk import Model, KaldiRecognizer
+from ia.modelos.modelo_intencion import detectar_intencion
+from ia.modelos.utils import limpiar_texto
+from ia.modelos.utils import _ensure_loaded
+from ia.modelos.utils import obtener_modelo
+from ia.modelos.entidades import extraer_entidades
+from datetime import datetime
+
+
 
 # ==== RUTAS Y MODELOS ====
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 MODEL_VOSK_PATH = "vosk-model-es-0.42"
 API_URL = "http://127.0.0.1:8000"
-UMBRAL_CONFIANZA = 0.5
+UMBRAL_CONFIANZA = 0.6
 LOG_PATH = "log_asistente.txt"
+with open("intenciones.json", encoding="utf-8") as archivo:
+    intenciones = json.load(archivo)
 
-# ==== IMPORTS LOCALES ====
-from ia.utils import (
-    limpiar_texto,
-    cargar_intenciones,
-    predecir_intencion,
-    modelo as model_intencion,
-    vectorizador,
-    label_encoder
-)
+
 
 # ==== MOTOR DE VOZ ====
 voz = pyttsx3.init()
 voz.setProperty('rate', 150)
 
 def hablar(texto):
-    print(f"🤖 {texto}")
+    print(f" {texto}")
     voz.say(texto)
+    voz.say("....")
     voz.runAndWait()
+    voz.say("....")
+    
+def iniciar_asistente(reconocedor, stream, engine, detectar_intencion):
+    print("🟢 VOXIA está activa. Puedes comenzar a hablar.")
+
+    while True:
+        print("🎤 Esperando tu voz...")
+        texto_usuario = None
+
+        # Escuchar hasta obtener texto válido
+        while not texto_usuario:
+            data = stream.read(4000)
+            if reconocedor.AcceptWaveform(data):
+                resultado = json.loads(reconocedor.Result())
+                texto_usuario = resultado.get("text", "").strip()
+                if texto_usuario:
+                    print(f">> Tú dijiste: {texto_usuario}")
+                else:
+                    print("⚠️ No detecto audio. ¿Puedes repetirlo?")
+                    time.sleep(1.5)
+
+        # Detectar intención
+        intencion, confianza = detectar_intencion(texto_usuario)
+        print(f"🔍 Intención detectada: {intencion} (confianza: {confianza:.2f})")
+
+        # Validar confianza
+        if confianza < 0.6:
+            respuesta = "No entendí bien lo que dijiste. ¿Puedes repetirlo?"
+        else:
+            respuesta = generar_respuesta(intencion)
+
+        # Hablar la respuesta
+        print(f">> VOXIA dice: {respuesta}")
+        engine.say(respuesta)
+        engine.runAndWait()
+
+        # Pequeña pausa antes de volver a escuchar
+        time.sleep(2)
+
+def generar_respuesta(intencion):
+    respuestas = {
+        "saludo": "Hola, ¿cómo estás?",
+        "despedida": "Hasta luego, que tengas buen día.",
+        "consulta": "Claro, dime qué necesitas.",
+        "agradecimiento": "Con gusto, estoy para ayudarte.",
+        "error": "No entendí bien, ¿puedes repetirlo?"
+    }
+    return respuestas.get(intencion, "No estoy seguro de cómo responder a eso.")
 
 # ==== AUDIO ====
 q = queue.Queue()
@@ -61,15 +116,71 @@ def convertir_numero(texto):
     except ValueError:
         return NUMEROS_PALABRAS.get(texto.lower(), None)
 
-# ==== VERIFICACIÓN DE BACKEND ====
+def agregar_producto_backend(producto):
+    if not backend_activo():
+        fallback.guardar_producto(producto["nombre"], producto["cantidad"])
+        return f"Guardé {producto['nombre']} con {producto['cantidad']} unidades en modo offline."
+    
 def backend_activo():
     try:
-        response = requests.get(f"{API_URL}/")
+        response = requests.get(f"{API_URL}/inventario/")
         return response.status_code == 200
     except:
         return False
 
-# ==== FUNCIONES DE BACKEND ====
+def ejecutar_accion(intencion, entidades):
+    try:
+        if intencion == "agregar":
+            nombre = entidades.get("nombre")
+            cantidad = entidades.get("cantidad", 1)
+            precio = entidades.get("precio", 0.0)
+            if not nombre:
+                return "No entendí qué producto quieres agregar."
+            response = requests.post(f"{API_URL}/", params={
+                "nombre": nombre,
+                "cantidad": cantidad,
+                "precio": precio
+            })
+            return response.json().get("mensaje", "Producto agregado.")
+
+        elif intencion == "buscar":
+            nombre = entidades.get("nombre")
+            if not nombre:
+                return "No entendí qué producto quieres buscar."
+            response = requests.get(f"{API_URL}/{nombre}")
+            data = response.json()
+            if "mensaje" in data:
+                return data["mensaje"]
+            return f"{data['nombre']} tiene {data['cantidad']} unidades disponibles."
+
+        elif intencion == "actualizar":
+            nombre = entidades.get("nombre")
+            cantidad = entidades.get("cantidad", 0)
+            precio = entidades.get("precio", 0.0)
+            if not nombre:
+                return "No entendí qué producto quieres actualizar."
+            response = requests.put(f"{API_URL}/{nombre}", params={
+                "cantidad": cantidad,
+                "precio": precio
+            })
+            return response.json().get("mensaje", "Producto actualizado.")
+
+        elif intencion == "eliminar":
+            nombre = entidades.get("nombre")
+            if not nombre:
+                return "No entendí qué producto quieres eliminar."
+            response = requests.delete(f"{API_URL}/{nombre}")
+            return response.json().get("mensaje", "Producto eliminado.")
+
+        elif intencion == "salir":
+            return "Saliendo del asistente..."
+
+        else:
+            return "No reconozco esa acción. Intenta de nuevo."
+
+    except Exception as e:
+        print(f"⚠️ Error en ejecutar_accion: {e}")
+        return "Ocurrió un error al conectar con el sistema. Intenta más tarde."
 
 def agregar_producto_backend(producto):
     if not backend_activo():
@@ -85,6 +196,8 @@ def agregar_producto_backend(producto):
             return "No se pudo agregar el producto."
     except:
         return "Error al conectar con el sistema de inventario."
+    
+
 
 def consultar_inventario_backend():
     if not backend_activo():
@@ -95,14 +208,18 @@ def consultar_inventario_backend():
             productos = response.json()
             if not productos:
                 return "El inventario está vacío."
-            texto = "Esto es lo que hay en inventario:\n"
+            texto = "📦 Inventario actual:\n"
             for p in productos:
-                texto += f"- {p['nombre']}: {p['cantidad']} unidades\n"
-            return texto
+                nombre = p.get("nombre", "¿?")
+                cantidad = p.get("cantidad", "?")
+                precio = p.get("precio", 0.00)
+                texto += f"- {nombre}: {cantidad} unidades, Q{precio:.2f} cada uno\n"
+            return texto.strip()
         else:
             return "Error al consultar inventario."
     except:
         return "No se pudo conectar al sistema de inventario."
+
 
 def eliminar_producto_backend(nombre):
     if not backend_activo():
@@ -144,22 +261,28 @@ def buscar_producto_backend(nombre):
 # ==== EXTRACTORES ====
 
 def extraer_datos_producto(texto):
-    nombre = re.search(r"(?:agregar|producto|nombre)?\s*(\w+)", texto)
-    precio = re.search(r"(?:precio|vale|cuesta|a)\s*(\w+)", texto)
-    cantidad = re.search(r"(?:cantidad|unidades|hay|de)\s*(\w+)", texto)
+    texto = texto.lower()
 
-    if nombre and precio and cantidad:
-        nombre_val = nombre.group(1).capitalize()
-        precio_val = convertir_numero(precio.group(1))
-        cantidad_val = convertir_numero(cantidad.group(1))
+    # Buscar nombre del producto (palabra después de "producto" o "agregar")
+    nombre_match = re.search(r"(?:agregar\s+producto\s+|producto\s+|agregar\s+)(\w+)", texto)
+    nombre = nombre_match.group(1).capitalize() if nombre_match else None
 
-        if precio_val is not None and cantidad_val is not None:
-            return {
-                "nombre": nombre_val,
-                "precio": float(precio_val),
-                "cantidad": int(cantidad_val)
-            }
+    # Buscar precio (número después de "precio", "vale", "cuesta")
+    precio_match = re.search(r"(?:precio|vale|cuesta)\s+(\w+)", texto)
+    precio = convertir_numero(precio_match.group(1)) if precio_match else None
+
+    # Buscar cantidad (número después de "cantidad", "unidades", "hay")
+    cantidad_match = re.search(r"(?:cantidad|unidades|hay|de)\s+(\w+)", texto)
+    cantidad = convertir_numero(cantidad_match.group(1)) if cantidad_match else None
+
+    if nombre and cantidad is not None:
+        return {
+            "nombre": nombre,
+            "precio": float(precio) if precio is not None else 0.0,
+            "cantidad": int(cantidad)
+        }
     return None
+
 
 def extraer_nombre_y_cantidad(texto):
     nombre = re.search(r"(?:producto|nombre)?\s*(\w+)", texto)
@@ -229,37 +352,81 @@ def ejecutar_intencion(intencion, texto):
 
 # ==== LOG DE INTERACCIONES ====
 
-def guardar_log(texto, intencion, respuesta):
-    with open(LOG_PATH, "a", encoding="utf-8") as f:
-        f.write(f"Usuario: {texto}\n")
-        f.write(f"Intención: {intencion}\n")
-        f.write(f"Asistente: {respuesta}\n")
-               f.write("="*40 + "\n")
+def guardar_log(texto_usuario, intencion, respuesta):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    archivo_csv = "registro_asistente.csv"
+
+    # Crear encabezado si el archivo no existe
+    try:
+        with open(archivo_csv, "x", newline="", encoding="utf-8") as archivo:
+            writer = csv.writer(archivo)
+            writer.writerow(["timestamp", "usuario", "intencion", "respuesta"])
+    except FileExistsError:
+        pass
+
+    # Agregar nueva fila
+    with open(archivo_csv, "a", newline="", encoding="utf-8") as archivo:
+        writer = csv.writer(archivo)
+        writer.writerow([timestamp, texto_usuario, intencion, respuesta])
+
 
 # ==== CICLO PRINCIPAL ====
 
 def escuchar():
-    model = Model(MODEL_VOSK_PATH)
-    rec = KaldiRecognizer(model, 16000)
-    rec.SetWords(True)
+    modelo_voz = Model(MODEL_VOSK_PATH)
+    reconocedor = KaldiRecognizer(modelo_voz, 16000)
+    reconocedor.SetWords(True)
 
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16',
-                           channels=1, callback=callback):
-        hablar("Asistente activado. Puedes comenzar a hablar.")
-        while True:
-            data = q.get()
-            if rec.AcceptWaveform(data):
-                resultado = json.loads(rec.Result())
-                texto = resultado.get("text", "").strip()
-                if texto:
-                    texto_limpio = limpiar_texto(texto)
-                    X = vectorizador.transform([texto_limpio])
-                    y_pred = model_intencion.predict(X)
-                    intencion = label_encoder.inverse_transform(y_pred)[0]
-                    respuesta = ejecutar_intencion(intencion, texto)
+                        channels=1, callback=callback):
+        hablar("Soy tu Asistente virtual VOXIA. Puedes comenzar a hablar.")
 
-                    if intencion == "salir" or respuesta.startswith("Saliendo"):
-                        break
+        buffer_audio = b""
+        tiempo_ultimo_audio = time.time()
+        silencio_max = 8  # segundos sin voz
+
+        while True:
+            if not q.empty():
+                data = q.get()
+                buffer_audio += data
+
+                if reconocedor.AcceptWaveform(data):
+                    resultado = json.loads(reconocedor.Result())
+                    texto = resultado.get("text", "").strip()
+                    buffer_audio = b""
+                    tiempo_ultimo_audio = time.time()
+
+                    if texto:
+                        print(f">> Tú dijiste: {texto}")
+                        respuesta = procesar_comando(texto)
+                        hablar(respuesta)
+
+                        if "saliendo" in respuesta.lower():
+                            hablar("👋 Cerrando el asistente. ¡Hasta luego!")
+                            break
+                    else:
+                        hablar("No escuché nada. Intenta de nuevo.")
+            else:
+                time.sleep(0.1)
+
+            # Manejo de silencio prolongado
+            if time.time() - tiempo_ultimo_audio > silencio_max:
+                hablar("No detecto audio. ¿Quieres seguir hablando?")
+                tiempo_ultimo_audio = time.time()
+
+def procesar_comando(texto):
+    texto_limpio = limpiar_texto(texto)
+    intencion, confianza = detectar_intencion(texto_limpio)
+
+    if confianza < UMBRAL_CONFIANZA:
+        return "No entendí bien lo que dijiste. ¿Puedes repetirlo?"
+
+    entidades = extraer_entidades(texto_limpio)
+    respuesta = ejecutar_accion(intencion, entidades)
+    guardar_log(texto, intencion, respuesta)  # si tienes esta función
+
+    return respuesta
+
 
 # ==== VARIABLES DE ESTADO ====
 ultima_intencion = None
