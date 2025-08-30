@@ -1,7 +1,5 @@
-# ia/entrenar_modelo.py
 from pathlib import Path
 import json
-import os
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import LabelEncoder
@@ -9,20 +7,21 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 import joblib
-
 from ia.modelos.utils import limpiar_texto
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 MODELOS_DIR = BASE_DIR / "modelos"
 MODELOS_DIR.mkdir(parents=True, exist_ok=True)
 
-INTENCIONES_PATH = DATA_DIR / "intenciones.json"
+INTENCIONES_PATH = Path(__file__).resolve().parent.parent.parent / "intenciones.json"
 MODEL_PATH = MODELOS_DIR / "modelo_intencion.h5"
 VECT_PATH = MODELOS_DIR / "vectorizador.pkl"
 ENC_PATH = MODELOS_DIR / "label_encoder.pkl"
 
 def cargar_base():
+    if not INTENCIONES_PATH.exists():
+        raise FileNotFoundError(f"No se encontró el archivo: {INTENCIONES_PATH}")
     with open(INTENCIONES_PATH, encoding="utf-8") as f:
         data = json.load(f)
     textos, etiquetas = [], []
@@ -58,10 +57,3 @@ def entrenar_desde_base_y_guardar(textos, etiquetas):
     model.save(MODEL_PATH)
     joblib.dump(vect, VECT_PATH)
     joblib.dump(le, ENC_PATH)
-    print(f"✅ Guardado modelo en {MODEL_PATH}")
-    print(f"✅ Guardado vectorizador en {VECT_PATH}")
-    print(f"✅ Guardado label_encoder en {ENC_PATH}")
-
-if __name__ == "__main__":
-    base_textos, base_labels = cargar_base()
-    entrenar_desde_base_y_guardar(base_textos, base_labels)

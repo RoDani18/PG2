@@ -4,6 +4,7 @@ from typing import List
 from backend import models
 from backend.auth.deps import get_db, require_roles, get_current_user
 from backend.routers.schemas_pedidos import PedidoCreate, PedidoUpdate, PedidoResponse
+import logging
 
 router = APIRouter()
 
@@ -90,3 +91,5 @@ def eliminar_pedido(
         db.rollback()
         raise
     return None
+
+

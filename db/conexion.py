@@ -16,9 +16,11 @@ def conectar():
             port=os.getenv("DB_PORT", "5432")
         )
         print("✅ Conexión exitosa a la base de datos.")
-        conn.close()
+        return conn  # ← Devuelve la conexión activa
     except Exception as e:
         print("❌ Error de conexión:", e)
+        return None  # ← Devuelve None si falla
+
 
 if __name__ == "__main__":
     conectar()

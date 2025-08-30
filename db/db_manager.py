@@ -13,21 +13,23 @@ PG_CONN = {
     "port": 5432
 }
 
-def guardar_producto(nombre, cantidad):
+def guardar_producto(nombre, cantidad, precio):
     try:
         conn_pg = psycopg2.connect(**PG_CONN)
         cur_pg = conn_pg.cursor()
         cur_pg.execute("""
             INSERT INTO inventario (nombre, cantidad, precio)
-            VALUES (%s, %s, 0)
+            VALUES (%s, %s, %s)
             ON CONFLICT (nombre) DO UPDATE 
-                SET cantidad = inventario.cantidad + EXCLUDED.cantidad
-        """, (nombre, cantidad))
+                SET cantidad = inventario.cantidad + EXCLUDED.cantidad,
+                    precio = EXCLUDED.precio
+        """, (nombre, cantidad, precio))
         conn_pg.commit()
         cur_pg.close()
         conn_pg.close()
         print("💾 Guardado directamente en PostgreSQL.")
     except OperationalError:
         print("⚠️ Sin conexión. Guardando offline...")
-        fallback.guardar_producto(nombre, cantidad)
+        fallback.guardar_producto(nombre, cantidad, precio)
+
 

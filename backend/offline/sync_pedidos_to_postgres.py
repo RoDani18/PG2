@@ -23,15 +23,23 @@ def sync():
 
         for p in pedidos:
             cur_pg.execute("""
-                INSERT INTO pedidos (usuario_id, producto, cantidad, estado, producto_id)
+                INSERT INTO pedidos (id, cliente, productos, total, fecha)
                 VALUES (%s, %s, %s, %s, %s)
-            """, (p["usuario_id"], p["producto"], p["cantidad"], p["estado"], p["producto_id"]))
+            """, (
+                p.id,
+                p.cliente,
+                ', '.join(p.productos),  # o usar JSON si la tabla lo permite
+                p.total,
+                p.fecha.isoformat()
+            ))
 
         conn_pg.commit()
         cur_pg.close()
         conn_pg.close()
 
-        pedidos_fallback.marcar_como_sincronizado([p["id"] for p in pedidos])
+        for p in pedidos:
+            pedidos_fallback.marcar_como_sincronizado(p.id)
+
         print(f"✅ Sincronizados {len(pedidos)} pedidos a PostgreSQL.")
 
     except Exception as e:

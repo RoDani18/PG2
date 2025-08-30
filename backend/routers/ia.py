@@ -8,12 +8,22 @@ from backend.config import settings
 from backend import models
 from ia.modelos.utils import predecir_intencion, recargar_modelo
 from ia.modelos.reentrenar_desde_bd import reentrenar
-from backend.routers.usuarios import require_roles, get_current_user  
+from backend.routers.usuarios import require_roles, get_current_user 
+from fastapi import APIRouter
+from backend.ia_client import detectar_intencion 
 
 router = APIRouter(prefix="/ia", tags=["IA"])
 
 TAU_LOW = settings.TAU_LOW
 TAU_HIGH = settings.TAU_HIGH
+
+class TextoEntrada(BaseModel):
+    texto: str
+
+@router.post("/probar-ia")
+def probar_ia(entrada: TextoEntrada):
+    resultado = detectar_intencion(entrada.texto)
+    return resultado
 
 def get_db():
     db = SessionLocal()
@@ -97,3 +107,4 @@ def reentrenar_modelo(_: models.Usuario = Depends(require_roles("admin"))):
     reentrenar()
     recargar_modelo()
     return {"mensaje": "Modelo reentrenado y recargado"}
+

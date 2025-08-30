@@ -1,10 +1,16 @@
-# ia/utils.py
+import os
 from pathlib import Path
 import re
 import joblib
 import numpy as np
 from threading import RLock
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 from tensorflow.keras.models import load_model
+
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
 
 BASE_DIR = Path(__file__).resolve().parent
 MODELOS_DIR = BASE_DIR / "modelos"
@@ -16,10 +22,6 @@ _model = None
 _vectorizer = None
 _label_encoder = None
 _lock = RLock()
-
-def obtener_modelo():
-    _ensure_loaded()
-    return _model
 
 def limpiar_texto(texto: str) -> str:
     texto = texto.lower()
@@ -35,9 +37,10 @@ def _ensure_loaded():
             _vectorizer = joblib.load(VECT_PATH)
             _label_encoder = joblib.load(ENC_PATH)
 
-def predecir_intencion(texto: str):
+def predecir_intencion(texto: str, usuario="anonimo"):
     if not texto or not texto.strip():
         return "desconocida", 0.0
+
     _ensure_loaded()
     t = limpiar_texto(texto)
     X = _vectorizer.transform([t]).toarray()
@@ -45,19 +48,25 @@ def predecir_intencion(texto: str):
     idx = int(np.argmax(y_proba))
     confianza = float(y_proba[idx])
     intent = _label_encoder.inverse_transform([idx])[0]
+
+    if confianza < 0.6:
+        registrar_interaccion(usuario, texto, intent, confianza)
+
     return intent, confianza
 
-def cargar_intenciones():
-    _ensure_loaded()
-    return _model, _vectorizer, _label_encoder
-
-def cargar_intenciones():
-    _ensure_loaded()
-    return _model, _vectorizer, _label_encoder
-
+def registrar_interaccion(usuario, frase, intencion_sugerida, confianza):
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO interacciones (usuario, frase, intencion_sugerida, confianza, fecha)
+            VALUES (:usuario, :frase, :intencion_sugerida, :confianza, NOW())
+        """), {
+            "usuario": usuario,
+            "frase": frase,
+            "intencion_sugerida": intencion_sugerida,
+            "confianza": confianza
+        })
 
 def recargar_modelo():
-    # Hot-reload seguro
     global _model, _vectorizer, _label_encoder
     with _lock:
         _model = load_model(MODEL_PATH)

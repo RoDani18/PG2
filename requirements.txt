@@ -1,0 +1,8 @@
+cffi==1.17.1
+comtypes==1.4.11
+psycopg2-binary==2.9.10
+pycparser==2.22
+pypiwin32==223
+pyttsx3==2.99
+pywin32==311
+sounddevice==0.5.2

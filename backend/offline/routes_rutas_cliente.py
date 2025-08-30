@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from backend.auth.utils import require_roles
+from backend.auth.deps import require_roles
 from backend.offline import rutas_fallback
 from pydantic import BaseModel
 

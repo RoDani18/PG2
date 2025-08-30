@@ -16,14 +16,22 @@ def init_db():
         """)
         conn.commit()
 
-def guardar_producto(nombre: str, cantidad: int):
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO productos (nombre, cantidad, sincronizado) VALUES (?, ?, 0)",
-            (nombre, cantidad)
-        )
-        conn.commit()
+def guardar_producto(nombre, cantidad, precio):
+    # Ejemplo con SQLite local
+    conn = sqlite3.connect("offline.db")
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO inventario (nombre, cantidad, precio)
+        VALUES (?, ?, ?)
+        ON CONFLICT(nombre) DO UPDATE SET
+            cantidad = cantidad + ?,
+            precio = ?
+    """, (nombre, cantidad, precio, cantidad, precio))
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("💾 Guardado offline en SQLite.")
+
 
 def buscar_producto(nombre: str):
     with sqlite3.connect(DB_PATH) as conn:
@@ -32,10 +40,10 @@ def buscar_producto(nombre: str):
         row = cursor.fetchone()
         return row[0] if row else None
 
-def actualizar_producto(nombre: str, cantidad: int):
+def actualizar_producto(nombre: str, cantidad: int, precio: float):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute("UPDATE productos SET cantidad = ? WHERE nombre = ?", (cantidad, nombre))
+        cursor.execute("UPDATE productos SET cantidad = ?, precio = ? WHERE nombre = ?", (cantidad, precio, nombre))
         conn.commit()
         return cursor.rowcount > 0
 

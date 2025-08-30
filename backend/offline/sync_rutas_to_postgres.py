@@ -23,16 +23,14 @@ def sync():
 
         for r in rutas:
             cur_pg.execute("""
-                INSERT INTO rutas (pedido_id, destino, estado, tiempo_estimado, lat_actual, lng_actual)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (r["pedido_id"], r["destino"], r["estado"], r["tiempo_estimado"], r["lat_actual"], r["lng_actual"]))
+                        INSERT INTO rutas (pedido_id, destino, estado, tiempo_estimado, lat_actual, lng_actual) VALUES (%s, %s, %s, %s, %s, %s)""", (r[1], r[2], r[3], r[4], r[5], r[6]))
 
         conn_pg.commit()
         cur_pg.close()
         conn_pg.close()
 
-        rutas_fallback.marcar_como_sincronizado([r["id"] for r in rutas])
-        print(f"✅ Sincronizadas {len(rutas)} rutas a PostgreSQL.")
+        for r in rutas:
+            rutas_fallback.marcar_como_sincronizado([r[0]])
 
     except Exception as e:
         print(f"❌ Error sincronizando rutas: {e}")

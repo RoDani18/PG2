@@ -1,42 +1,46 @@
-# ia/reentrenar_desde_db.py
-import os
-from pathlib import Path
-import joblib
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
-from ia.modelos.entrenar_modelo import entrenar_desde_base_y_guardar
-from ia.modelos.utils import limpiar_texto
-
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL no configurada en .env")
-
-engine = create_engine(DATABASE_URL)
+from ia.modelos.entrenar_modelo import entrenar_desde_base_y_guardar, cargar_base
+from ia.modelos.utils import limpiar_texto, engine
+from sqlalchemy import text
 
 def cargar_dataset():
-    # 1) Base estática
-    from ia.modelos.entrenar_modelo import cargar_base
-    textos, etiquetas = cargar_base()
+    textos, etiquetas = [], []
 
-    # 2) Confirmadas y auto-etiquetadas desde BD
+    # Frases manuales
     with engine.connect() as conn:
         rows = conn.execute(text("""
-            SELECT texto, COALESCE(intent_final, intent_predicha) AS etiqueta
-            FROM interacciones
-            WHERE (estado = 'confirmada' OR estado = 'auto')
-            AND COALESCE(intent_final, intent_predicha) IS NOT NULL
+            SELECT frase, intencion FROM frases_entrenamiento
         """)).fetchall()
+        for frase, intencion in rows:
+            textos.append(limpiar_texto(frase))
+            etiquetas.append(intencion)
 
-    for texto, etiqueta in rows:
-        textos.append(limpiar_texto(texto))
-        etiquetas.append(etiqueta)
+    # Frases de usuarios
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT frase, COALESCE(intencion, intencion_sugerida) AS etiqueta
+            FROM interacciones
+            WHERE COALESCE(intencion, intencion_sugerida) IS NOT NULL
+        """)).fetchall()
+        for frase, etiqueta in rows:
+            textos.append(limpiar_texto(frase))
+            etiquetas.append(etiqueta)
+
     return textos, etiquetas
+
 
 def reentrenar():
     textos, etiquetas = cargar_dataset()
     entrenar_desde_base_y_guardar(textos, etiquetas)
-    print("✅ Reentrenamiento completado")
+    registrar_version_modelo(len(textos), notas="Reentrenamiento automático")
 
-if __name__ == "__main__":
-    reentrenar()
+
+def registrar_version_modelo(total, origen="frases_entrenamiento + interacciones", notas="Auto"):
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO versiones_modelo (total_frases, origen, notas)
+            VALUES (:total, :origen, :notas)
+        """), {
+            "total": total,
+            "origen": origen,
+            "notas": notas
+        })

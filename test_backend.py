@@ -1,42 +1,38 @@
+# test_backend.py
+import pytest
 import requests
 
 BASE_URL = "http://localhost:8000"
 LOGIN_ENDPOINT = "/auth/login"
-EMAIL = "dani@correo.com"  # según tu base de datos
-PASSWORD = "123456"  # debe ir como string
+EMAIL = "dani@correo.com"
+PASSWORD = "123456"
 
-def login():
+@pytest.fixture(scope="session")
+def token():
     print("🔐 Iniciando sesión...")
     response = requests.post(f"{BASE_URL}{LOGIN_ENDPOINT}", json={
         "email": EMAIL,
         "password": PASSWORD
     })
-    if response.status_code == 200:
-        token = response.json()["access_token"]
-        print("✅ Login exitoso.")
-        return token
-    else:
-        print("❌ Error en login:", response.text)
-        return None
+    assert response.status_code == 200, f"❌ Error en login: {response.text}"
+    print("✅ Login exitoso.")
+    return response.json()["access_token"]
 
-def test_endpoint(endpoint, token):
+@pytest.mark.parametrize("endpoint", [
+    "/usuarios/me",
+    "/inventarios/",
+    "/pedidos/mios",
+    "/rutas/",
+    "/offline/inventario"
+])
+def test_endpoint(token, endpoint):
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}{endpoint}", headers=headers)
-    print(f"📡 GET {endpoint} → {response.status_code}")
-    if response.status_code == 200:
-        print("✅ OK:", response.json())
-    else:
-        print("❌ Error:", response.text)
-
-if __name__ == "__main__":
-    token = login()
-    if token:
-        endpoints = [
-            "/usuarios/me",
-            "/inventarios/",
-            "/pedidos/mios",
-            "/rutas/",
-            "/offline/inventario"
-        ]
-        for ep in endpoints:
-            test_endpoint(ep, token)
+    url = f"{BASE_URL}{endpoint}"
+    print(f"\n📡 Probando endpoint: {url}")
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 200, f"❌ Error {response.status_code}: {response.text}"
+    try:
+        data = response.json()
+        print("📦 Contenido:", data if data else "Sin datos")
+    except Exception as e:
+        pytest.fail(f"⚠️ Error al parsear JSON: {e}")

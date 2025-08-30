@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from auth.utils import require_roles
+from backend.auth.deps import require_roles
 from backend.offline import fallback
+
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/offline/inventario", tags=["Inventario Offline"])
