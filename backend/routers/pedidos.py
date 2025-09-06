@@ -40,6 +40,8 @@ def crear_pedido(
         cantidad=pedido_in.cantidad,
         estado="pendiente"
     )
+    
+    
     db.add(pedido)
     try:
         db.commit()
@@ -61,8 +63,43 @@ def actualizar_pedido(
     if not ped:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")
 
+    estado_anterior = ped.estado
+    estado_nuevo = pedido_upd.estado
+
     for field, value in pedido_upd.dict(exclude_unset=True).items():
         setattr(ped, field, value)
+
+    # 🧮 Actualizar inventario si cambia el estado
+    if estado_nuevo and estado_nuevo != estado_anterior:
+        producto = db.query(models.Producto).filter_by(nombre=ped.producto).first()
+        if not producto:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+        if estado_nuevo == "entregado":
+            if producto.cantidad < ped.cantidad:
+                raise HTTPException(status_code=400, detail="Inventario insuficiente para entregar el pedido")
+            producto.cantidad -= ped.cantidad
+
+            # 📝 Registrar salida en movimientos
+            mov = models.MovimientoInventario(
+                producto_id=producto.id,
+                tipo="salida",
+                cantidad=ped.cantidad,
+                pedido_id=ped.id
+            )
+            db.add(mov)
+
+        elif estado_nuevo == "cancelado":
+            producto.cantidad += ped.cantidad
+
+            # 📝 Registrar entrada en movimientos
+            mov = models.MovimientoInventario(
+                producto_id=producto.id,
+                tipo="entrada",
+                cantidad=ped.cantidad,
+                pedido_id=ped.id
+            )
+            db.add(mov)
 
     try:
         db.commit()
@@ -70,6 +107,26 @@ def actualizar_pedido(
     except Exception:
         db.rollback()
         raise
+    return ped
+
+@router.put("/cliente/{pedido_id}", response_model=PedidoResponse)
+def cliente_modifica_pedido(
+    pedido_id: int,
+    pedido_upd: PedidoUpdate,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("cliente"))
+):
+    ped = db.query(models.Pedido).filter_by(id=pedido_id, usuario_id=user.id).first()
+    if not ped:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    if ped.estado != "pendiente":
+        raise HTTPException(status_code=400, detail="Solo puedes modificar pedidos pendientes")
+
+    for field, value in pedido_upd.dict(exclude_unset=True).items():
+        setattr(ped, field, value)
+
+    db.commit()
+    db.refresh(ped)
     return ped
 
 @router.delete("/{pedido_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -92,4 +149,14 @@ def eliminar_pedido(
         raise
     return None
 
+@router.get("/{pedido_id}", response_model=PedidoResponse)
+def obtener_pedido_por_id(
+    pedido_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("empleado", "admin"))
+):
+    ped = db.query(models.Pedido).filter_by(id=pedido_id).first()
+    if not ped:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    return ped
 

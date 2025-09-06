@@ -7,7 +7,7 @@ from backend.database.connection import SessionLocal
 from backend.config import settings
 from backend import models
 from ia.modelos.utils import predecir_intencion, recargar_modelo
-from ia.modelos.reentrenar_desde_bd import reentrenar
+from ia.modelos.reentrenar_desde_bd import entrenar_modelo
 from backend.routers.usuarios import require_roles, get_current_user 
 from fastapi import APIRouter
 from backend.ia_client import detectar_intencion 
@@ -104,7 +104,7 @@ def feedback(data: FeedbackIn,
 @router.post("/reentrenar", status_code=202)
 def reentrenar_modelo(_: models.Usuario = Depends(require_roles("admin"))):
     # Entrena y recarga en caliente (bloqueante en esta versión simple)
-    reentrenar()
+    entrenar_modelo()
     recargar_modelo()
     return {"mensaje": "Modelo reentrenado y recargado"}
 

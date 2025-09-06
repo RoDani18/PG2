@@ -73,3 +73,12 @@ class FraseEntrenamiento(Base):
     frase = Column(Text)
     intencion = Column(Text)
     fuente = Column(Text)
+    
+class MovimientoInventario(Base):
+    __tablename__ = "movimientos_inventario"
+    id = Column(Integer, primary_key=True)
+    producto_id = Column(Integer, ForeignKey("inventario.id"))
+    tipo = Column(String)  # "entrada" o "salida"
+    cantidad = Column(Integer)
+    fecha = Column(DateTime, default=datetime.datetime.utcnow)
+    pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=True)

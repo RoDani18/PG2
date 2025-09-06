@@ -1,58 +1,88 @@
 import requests
 
-def consultar_inventario():
+BASE_URL = "http://localhost:8000"
+INVENTARIO_URL = f"{BASE_URL}/inventarios"
+LOGIN_URL = f"{BASE_URL}/auth/login"
+
+# 🔐 Autenticación
+def autenticar_usuario(email: str, password: str) -> str:
     try:
-        response = requests.get("http://localhost:8000/inventario")
+        response = requests.post(LOGIN_URL, json={
+            "email": email,
+            "password": password
+        })
+        response.raise_for_status()
+        token = response.json().get("access_token")
+        return token
+    except Exception as e:
+        print("❌ Error al autenticar:", e)
+        return None
+
+# 📦 Consultar inventario
+def consultar_inventario(token: str) -> str:
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(INVENTARIO_URL, headers=headers)
+        response.raise_for_status()
         inventario = response.json()
-        respuesta = "Inventario actual:\n"
+        respuesta = "📦 Inventario actual:\n"
         for item in inventario:
-            respuesta += f"{item['nombre']}: {item['cantidad']} unidades\n"
+            respuesta += f"- {item['nombre']}: {item['cantidad']} unidades\n"
         return respuesta
     except Exception as e:
         print("❌ Error al consultar inventario:", e)
         return "No pude consultar el inventario."
 
-def agregar_producto(nombre, cantidad, usuario):
+# ➕ Agregar producto
+def agregar_producto(nombre: str, cantidad: int, precio: float, token: str) -> str:
     try:
-        response = requests.post("http://localhost:8000/inventario", json={
+        headers = {"Authorization": f"Bearer {token}"}
+        payload = {
             "nombre": nombre,
             "cantidad": cantidad,
-            "usuario": usuario
-        })
-        if response.status_code == 200:
-            return f"Producto {nombre} agregado con éxito."
+            "precio": precio
+        }
+        response = requests.post(INVENTARIO_URL, json=payload, headers=headers)
+        if response.status_code == 201:
+            return f"✅ Producto '{nombre}' agregado con éxito."
+        elif response.status_code == 409:
+            return f"⚠️ El producto '{nombre}' ya existe."
         else:
-            return "No se pudo agregar el producto."
+            return f"❌ Error {response.status_code}: {response.text}"
     except Exception as e:
         print("❌ Error al agregar producto:", e)
         return "Error al agregar producto."
-    
-def actualizar_producto(nombre, nueva_cantidad, usuario):
+
+# 🔄 Actualizar producto
+def actualizar_producto(nombre: str, nueva_cantidad: int, nuevo_precio: float, token: str) -> str:
     try:
-        response = requests.put("http://localhost:8000/inventario", json={
-            "nombre": nombre,
+        headers = {"Authorization": f"Bearer {token}"}
+        payload = {
             "cantidad": nueva_cantidad,
-            "usuario": usuario
-        })
+            "precio": nuevo_precio
+        }
+        response = requests.put(f"{INVENTARIO_URL}/{nombre}", json=payload, headers=headers)
         if response.status_code == 200:
-            return f"Producto {nombre} actualizado a {nueva_cantidad} unidades."
+            return f"🔄 Producto '{nombre}' actualizado correctamente."
+        elif response.status_code == 404:
+            return f"⚠️ Producto '{nombre}' no encontrado."
         else:
-            return "No se pudo actualizar el producto."
+            return f"❌ Error {response.status_code}: {response.text}"
     except Exception as e:
         print("❌ Error al actualizar producto:", e)
         return "Error al actualizar producto."
 
-def eliminar_producto(nombre, usuario):
+# 🗑️ Eliminar producto
+def eliminar_producto(nombre: str, token: str) -> str:
     try:
-        response = requests.delete("http://localhost:8000/inventario", json={
-            "nombre": nombre,
-            "usuario": usuario
-        })
-        if response.status_code == 200:
-            return f"Producto {nombre} eliminado correctamente."
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.delete(f"{INVENTARIO_URL}/{nombre}", headers=headers)
+        if response.status_code == 204:
+            return f"🗑️ Producto '{nombre}' eliminado correctamente."
+        elif response.status_code == 404:
+            return f"⚠️ Producto '{nombre}' no encontrado."
         else:
-            return "No se pudo eliminar el producto."
+            return f"❌ Error {response.status_code}: {response.text}"
     except Exception as e:
         print("❌ Error al eliminar producto:", e)
         return "Error al eliminar producto."
-

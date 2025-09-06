@@ -12,11 +12,11 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
-BASE_DIR = Path(__file__).resolve().parent
-MODELOS_DIR = BASE_DIR / "modelos"
-MODEL_PATH = MODELOS_DIR / "modelo_intencion.h5"
-VECT_PATH = MODELOS_DIR / "vectorizador.pkl"
-ENC_PATH = MODELOS_DIR / "label_encoder.pkl"
+BASE_DIR = Path(__file__).resolve().parent.absolute()
+MODEL_PATH = BASE_DIR / "modelo_intencion.h5"
+VECT_PATH = BASE_DIR / "vectorizador.pkl"
+ENC_PATH = BASE_DIR / "label_encoder.pkl"
+
 
 _model = None
 _vectorizer = None

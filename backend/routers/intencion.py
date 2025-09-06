@@ -1,25 +1,20 @@
-from fastapi import APIRouter, Request, Depends
-from sqlalchemy.orm import Session
-from backend.database.connection import get_db
-from backend.models import FraseEntrenamiento
+from fastapi import APIRouter, Request
+from ia.modelos.utils import predecir_intencion
+from ia.modelos.entidades import extraer_entidades
 
 router = APIRouter()
 
-@router.get("/")
-def test_intencion():
-    return {"mensaje": "Endpoint de intención activo"}
-
 @router.post("/")
-async def detectar_intencion(request: Request, db: Session = Depends(get_db)):
+async def detectar_intencion(request: Request):
     datos = await request.json()
-    texto = datos.get("texto", "").lower()
+    texto = datos.get("texto", "").strip()
+    usuario = datos.get("usuario", "anonimo")
 
-    # Buscar coincidencia exacta o parcial
-    frase = db.query(FraseEntrenamiento).filter(
-        FraseEntrenamiento.frase.ilike(f"%{texto}%")
-    ).first()
+    intencion, confianza = predecir_intencion(texto, usuario)
+    entidades = extraer_entidades(texto)
 
-    if frase:
-        return {"intencion": frase.intencion}
-    else:
-        return {"intencion": "desconocida"}
+    return {
+        "intencion": intencion,
+        "confianza": confianza,
+        "entidades": entidades
+    }

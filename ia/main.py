@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from ia.modelos.utils import predecir_intencion
 from ia.modelos.entidades import extraer_entidades
-from ia.modelos.reentrenar_desde_bd import reentrenar
+from ia.modelos.reentrenar_desde_bd import entrenar_modelo, reentrenar
 from ia.modelos.utils import _model, _label_encoder
 from pydantic import BaseModel
 from ia.modelos.utils import recargar_modelo
@@ -35,10 +35,14 @@ def detectar_intencion(frase: FraseEntrada):
 
 @app.post("/reentrenar")
 def ejecutar_reentrenamiento():
-    reentrenar()
-    recargar_modelo()
-    return {"mensaje": "✅ Reentrenamiento ejecutado correctamente"}
-
+    print("🔁 Reentrenando modelo desde BD...")
+    try:
+        total = reentrenar()
+        print(f"✅ Reentrenamiento completado con {total} frases.")
+        return {"mensaje": "Reentrenamiento exitoso", "total_frases": total}
+    except Exception as e:
+        print(f"❌ Error en reentrenamiento: {e}")
+        return {"error": str(e)}
 
 @app.get("/status")
 def status():
