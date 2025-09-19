@@ -41,9 +41,9 @@ app.include_router(inventario.router, prefix="/inventarios", tags=["Inventario"]
 app.include_router(pedidos.router, prefix="/pedidos", tags=["Pedidos"])
 app.include_router(rutas.router, prefix="/rutas", tags=["Rutas"])
 app.include_router(offline_routes.router)
-app.include_router(analisis.router, prefix="/ia", tags=["IA"])
+app.include_router(analisis.router, prefix="/ia/analisis", tags=["IA"])
 app.include_router(usuario_router)
-app.include_router(ia_router.router, prefix="/ia", tags=["IA"])
+app.include_router(ia_router.router)
 app.include_router(intencion.router, prefix="/intencion", tags=["Intención"])
 app.include_router(movimientos.router, prefix="/movimientos", tags=["Movimientos"])
 

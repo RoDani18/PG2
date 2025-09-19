@@ -1,5 +1,5 @@
 # backend/routers/ia.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -10,7 +10,11 @@ from ia.modelos.utils import predecir_intencion, recargar_modelo
 from ia.modelos.reentrenar_desde_bd import entrenar_modelo
 from backend.routers.usuarios import require_roles, get_current_user 
 from fastapi import APIRouter
-from backend.ia_client import detectar_intencion 
+from backend.ia_client import detectar_intencion
+from backend.database.connection import SessionLocal 
+from word2number import w2n
+from Voz_Asistente.inventario import agregar_producto, actualizar_producto, consultar_inventario
+
 
 router = APIRouter(prefix="/ia", tags=["IA"])
 
@@ -45,6 +49,8 @@ class FeedbackIn(BaseModel):
     interaccion_id: int
     intent_final: Optional[str] = None
     accion: str = Field(..., pattern="^(confirmar|corregir|descartar)$")
+    
+
 
 @router.post("/predecir", response_model=PrediccionOut)
 def predecir(texto_in: TextoIn, 
@@ -78,6 +84,18 @@ def predecir(texto_in: TextoIn,
         pedir_confirmacion=pedir_confirm
     )
 
+@router.post("/reentrenar-automatico", status_code=202)
+def reentrenar_automatico(
+    db: Session = Depends(get_db),
+    _: models.Usuario = Depends(require_roles("admin"))
+):
+    frases = db.query(models.FraseEntrenamiento).filter(models.FraseEntrenamiento.intencion != "pendiente").all()
+    textos = [f.frase for f in frases]
+    etiquetas = [f.intencion for f in frases]
+    entrenar_modelo(textos, etiquetas)
+    recargar_modelo()
+    return {"mensaje": "Reentrenamiento automático ejecutado"}
+
 @router.post("/feedback", status_code=204)
 def feedback(data: FeedbackIn,
             db: Session = Depends(get_db),
@@ -102,9 +120,226 @@ def feedback(data: FeedbackIn,
     return
 
 @router.post("/reentrenar", status_code=202)
-def reentrenar_modelo(_: models.Usuario = Depends(require_roles("admin"))):
-    # Entrena y recarga en caliente (bloqueante en esta versión simple)
-    entrenar_modelo()
+def reentrenar_modelo(
+    db: Session = Depends(get_db),
+    _: models.Usuario = Depends(require_roles("admin"))
+):
+    frases = db.query(models.FraseEntrenamiento).all()
+    textos = [f.frase for f in frases]
+    etiquetas = [f.intencion for f in frases]
+
+    entrenar_modelo(textos, etiquetas)
     recargar_modelo()
     return {"mensaje": "Modelo reentrenado y recargado"}
 
+
+@router.post("/ejecutar-comando")
+def ejecutar_comando(
+    entrada: TextoEntrada,
+    request: Request, 
+    user: models.Usuario = Depends(get_current_user)
+):
+    token = request.headers.get("authorization", "").replace("Bearer ", "")
+    if not token:
+        return {"respuesta": "❌ No se pudo obtener el token de autenticación."}
+
+    texto = entrada.texto.lower()
+    print(f"🧠 Comando recibido: '{texto}' | Rol: {user.rol}")
+
+    # 🎯 Fallback manual prioritario
+    if "cuánto cuesta" in texto or "precio de" in texto:
+        intencion = "consultar_precio"
+        nombre = texto.replace("cuánto cuesta", "").replace("precio de", "").strip()
+        entidades = {"nombre": nombre}
+    elif "cuántas unidades" in texto or "cantidad de" in texto or "cuántos productos" in texto:
+        intencion = "consultar_cantidad"
+        nombre = texto.replace("cuántas unidades", "").replace("cantidad de", "").replace("cuántos productos", "").strip()
+        entidades = {"nombre": nombre}
+    else:
+        try:
+            resultado = detectar_intencion(texto)
+            intencion = resultado.get("intencion", "").replace(" ", "_").lower()
+            entidades = resultado.get("entidades", {})
+        except Exception as e:
+            return {"respuesta": f"❌ Error al detectar intención: {str(e)}"}
+
+    print(f"🎯 Intención detectada: {intencion} | Entidades: {entidades}")
+
+    nombre = entidades.get("nombre") or entidades.get("producto")
+    if nombre:
+        nombre = nombre.replace("producto", "").strip()
+    cantidad = entidades.get("cantidad")
+    precio = entidades.get("precio")
+
+    # 🧪 Fallback defensivo para cantidad y precio
+    import re
+    if cantidad is None:
+        match = re.search(r"cantidad(?: de)? (\d+)", texto)
+        if match:
+            cantidad = match.group(1)
+    if precio is None:
+        match = re.search(r"precio(?: de)? (\d+)", texto)
+        if match:
+            precio = match.group(1)
+
+    # 🧠 Fallback para frases no entendidas
+    if not intencion or intencion == "no_entendida":
+        db = SessionLocal()
+        nueva_frase = models.FraseEntrenamiento(
+            frase=texto,
+            intencion="pendiente",
+            fuente="auto_reentrenamiento",
+            nombre=nombre or "",
+            precio_real=str(precio) if precio else None,
+            cantidad=cantidad if cantidad else None
+        )
+        db.add(nueva_frase)
+        db.commit()
+        db.close()
+        return {"respuesta": "⚠️ No entendí el comando. Lo guardaré para mejorar."}
+
+    # 🎯 Ejecución por intención
+    try:
+        from Voz_Asistente import inventario, pedidos
+
+        if intencion == "agregar_producto":
+            return {"respuesta": inventario.agregar_producto(nombre, cantidad, precio, token)}
+
+        elif intencion == "actualizar_producto":
+            return {"respuesta": inventario.actualizar_producto(nombre, cantidad, precio, token)}
+
+        elif intencion == "eliminar_producto":
+            return {"respuesta": inventario.eliminar_producto(nombre, token)}
+
+        elif intencion == "consultar_inventario":
+            return {"respuesta": inventario.consultar_inventario(token)}
+
+        elif intencion == "consultar_precio":
+            return {"respuesta": inventario.consultar_precio_producto(nombre, token)}
+
+        elif intencion == "consultar_cantidad":
+            return {"respuesta": inventario.consultar_cantidad_producto(nombre, token)}
+
+        elif intencion == "consultar_stock_bajo":
+            return {"respuesta": inventario.productos_bajo_stock(token)}
+
+        elif intencion == "consultar_inventario_por_cliente":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden consultar inventario por cliente."}
+            cliente_id = entidades.get("cliente_id") or entidades.get("cliente")
+            if not cliente_id:
+                return {"respuesta": "⚠️ No se detectó el cliente para consultar inventario."}
+            return {"respuesta": inventario.consultar_inventario_por_cliente(cliente_id, token)}
+
+        elif intencion == "crear_pedido":
+            if user.rol not in ["cliente", "admin"]:
+                return {"respuesta": "⚠️ Solo clientes o administradores pueden crear pedidos por voz."}
+            
+            if cantidad is None:
+                from word2number import w2n
+                
+                try:
+                    cantidad = w2n.word_to_num(texto.split(" de ")[1].split()[0])
+                except:
+                    match = re.search(r"cantidad(?: de)? (\d+)", texto)
+                    if match:
+                        cantidad = match.group(1)
+                        
+                        return {"respuesta": pedidos.crear_pedido(nombre, int(cantidad), token)}
+
+        elif intencion == "agregar_pedido":
+            if user.rol not in ["cliente", "admin"]:
+                return {"respuesta": "⚠️ Solo clientes o administradores pueden crear pedidos por voz."}
+            
+            if cantidad is None:
+                from word2number import w2n
+                
+                try:
+                    cantidad = w2n.word_to_num(texto.split(" de ")[1].split()[0])
+                except:
+                    match = re.search(r"cantidad(?: de)? (\d+)", texto)
+                    if match:
+                        cantidad = match.group(1)
+                        
+                        return {"respuesta": pedidos.crear_pedido(nombre, int(cantidad), token)}
+
+
+        elif intencion == "ver_pedido":
+            return {"respuesta": pedidos.ver_pedido(token)}
+
+        elif intencion == "editar_pedido":
+            if user.rol not in ["cliente", "admin"]:
+                return {"respuesta": "⚠️ Solo clientes o administradores pueden editar pedidos."}
+            pedido_id = entidades.get("pedido_id")
+            nueva_cantidad = entidades.get("cantidad")
+            if not pedido_id or not nueva_cantidad:
+                return {"respuesta": "⚠️ Faltan datos para editar el pedido."}
+            return {"respuesta": pedidos.modificar_pedido_cliente(pedido_id, int(nueva_cantidad), token)}
+
+        elif intencion == "eliminar_pedido":
+            if user.rol not in ["cliente", "admin"]:
+                return {"respuesta": "⚠️ Solo clientes o administradores pueden eliminar pedidos."}
+            pedido_id = entidades.get("pedido_id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido a eliminar."}
+            return {"respuesta": pedidos.eliminar_pedido(pedido_id, token)}
+
+        elif intencion == "ver_pedido_detallado":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden ver pedidos detallados."}
+            pedido_id = entidades.get("pedido_id") or entidades.get("id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido a consultar."}
+            return {"respuesta": pedidos.ver_pedido_por_id(pedido_id, token)}
+
+        elif intencion == "consultar_pedidos_por_cliente":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden consultar pedidos por cliente."}
+            cliente_id = entidades.get("cliente_id") or entidades.get("cliente")
+            if not cliente_id:
+                return {"respuesta": "⚠️ No se detectó el cliente para consultar pedidos."}
+            return {"respuesta": pedidos.consultar_pedidos_por_cliente(cliente_id, token)}
+
+        elif intencion == "ver_historial_pedidos":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden ver historial de pedidos por cliente."}
+            cliente_id = entidades.get("cliente_id") or entidades.get("cliente")
+            if not cliente_id:
+                return {"respuesta": "⚠️ No se detectó el cliente para consultar historial."}
+            return {"respuesta": pedidos.ver_historial_pedidos(cliente_id, token)}
+
+        elif intencion == "ver_movimientos_inventario":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden ver movimientos de inventario."}
+            return {"respuesta": pedidos.ver_movimientos_inventario(token)}
+
+        elif intencion == "descargar_historial_pedidos":
+            if user.rol != "admin":
+                return {"respuesta": "⚠️ Solo los administradores pueden descargar historial de pedidos."}
+            cliente_id = entidades.get("cliente_id") or entidades.get("cliente")
+            if not cliente_id:
+                return {"respuesta": "⚠️ No se detectó el cliente para generar el historial."}
+            return {"respuesta": pedidos.generar_reporte_historial(cliente_id, token)}
+
+        elif intencion == "descargar_reportes_globales":
+            if user.rol != "admin":
+                return {"respuesta": "⚠️ Solo los administradores pueden descargar reportes globales."}
+            periodo = entidades.get("periodo") or "último mes"
+            return {"respuesta": pedidos.generar_reporte_global(periodo, token)}
+        elif intencion == "actualizar_estado_pedido":
+            if user.rol not in ["empleado", "admin"]:
+                return {"respuesta": "⚠️ Solo empleados o administradores pueden actualizar el estado de pedidos."}
+            pedido_id = entidades.get("pedido_id")
+            nuevo_estado = entidades.get("estado")
+            if not pedido_id or not nuevo_estado:
+                return {"respuesta": "⚠️ Faltan datos para actualizar el estado del pedido."}
+            return {"respuesta": pedidos.actualizar_estado_pedido(pedido_id, nuevo_estado, token)}
+
+        else:
+            return {"respuesta": f"⚠️ Intención '{intencion}' no ejecutable."}
+
+    except Exception as e:
+        return {"respuesta": f"❌ Error al ejecutar '{intencion}': {str(e)}"}
+
+
+    

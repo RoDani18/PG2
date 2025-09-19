@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.utils import to_categorical
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
+from backend import models
 from ia.modelos.utils import engine, limpiar_texto
 
 # 📁 Carpeta de modelos
@@ -73,6 +74,15 @@ def reentrenar():
     total = entrenar_modelo(textos, etiquetas)
     registrar_version(total)
     return total
+
+def reentrenamiento_automatico_desde_bd():
+    from backend.database.connection import SessionLocal
+    db = SessionLocal()
+    frases = db.query(models.FraseEntrenamiento).filter(models.FraseEntrenamiento.intencion != "pendiente").all()
+    textos = [f.frase for f in frases]
+    etiquetas = [f.intencion for f in frases]
+    entrenar_modelo(textos, etiquetas)
+    db.close()
 
 # 🧪 Ejecución directa
 if __name__ == "__main__":

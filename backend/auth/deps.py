@@ -8,7 +8,7 @@ from backend.database.connection import SessionLocal
 from backend.crud import crud_usuario  # ✅ nuevo import
 from backend.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

@@ -26,7 +26,7 @@ def listar_mios(
 def crear_pedido(
     pedido_in: PedidoCreate,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("cliente", "empleado", "admin"))
+    user=Depends(require_roles("cliente","admin"))
 ):
     # ✅ Validar que el producto exista
     producto = db.query(models.Producto).filter_by(nombre=pedido_in.producto).first()
@@ -37,6 +37,7 @@ def crear_pedido(
     pedido = models.Pedido(
         usuario_id=user.id,
         producto=pedido_in.producto,
+        producto_id=producto.id,  # ✅ ← ESTE ES EL CAMBIO
         cantidad=pedido_in.cantidad,
         estado="pendiente"
     )

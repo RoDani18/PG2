@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import Request
 from sqlalchemy.orm import Session
 from backend import models
+from sqlalchemy import func
 from backend.auth.deps import get_db, require_roles
 from backend.routers.schemas_inventario import (
     ProductoCreate, ProductoUpdate, ProductoResponse
@@ -12,7 +14,7 @@ router = APIRouter()
 @router.get("/", response_model=List[ProductoResponse])
 def listar_productos(
     db: Session = Depends(get_db),
-    #user=Depends(require_roles("empleado", "admin", "cliente"))
+    user=Depends(require_roles("empleado", "admin", "cliente"))
 ):
     return db.query(models.Producto).all()
 
@@ -20,7 +22,7 @@ def listar_productos(
 def obtener_producto(
     nombre: str,
     db: Session = Depends(get_db),
-    user=Depends(require_roles("empleado", "admin", "cliente"))
+    user=Depends(require_roles("empleado", "admin"))
 ):
     producto = db.query(models.Producto).filter(models.Producto.nombre == nombre).first()
     if not producto:
@@ -50,10 +52,13 @@ def agregar_producto(
 def actualizar_producto(
     nombre: str,
     data: ProductoUpdate,
+     request: Request,
     db: Session = Depends(get_db),
     user=Depends(require_roles("empleado", "admin"))
 ):
-    producto = db.query(models.Producto).filter(models.Producto.nombre == nombre).first()
+    print("🔐 Header recibido:", request.headers.get("authorization"))
+    print("🧠 Usuario autenticado:", user.email)
+    producto = db.query(models.Producto).filter(func.lower(models.Producto.nombre) == nombre.lower()).first()
     if not producto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
 
@@ -74,7 +79,7 @@ def eliminar_producto(
     db: Session = Depends(get_db),
     user=Depends(require_roles("empleado", "admin"))
 ):
-    producto = db.query(models.Producto).filter(models.Producto.nombre == nombre).first()
+    producto = db.query(models.Producto).filter(func.lower(models.Producto.nombre) == nombre.lower()).first()
     if not producto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado")
     
