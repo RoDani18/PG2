@@ -12,9 +12,11 @@ ESTADOS_VALIDOS = ('pendiente', 'enviado', 'entregado', 'cancelado')
 class PedidoBase(BaseModel):
     producto: str = Field(..., min_length=1)
     cantidad: int = Field(..., ge=1)
+    direccion: str 
 
 class PedidoCreate(PedidoBase):
     pass
+
 
 class PedidoUpdate(BaseModel):
     producto: Optional[str] = Field(None, min_length=1)
@@ -27,6 +29,15 @@ class PedidoResponse(PedidoBase):
     estado: str
     producto_id: int           # ✅ ID del producto en inventario
     fecha: datetime            # ✅ Fecha de creación del pedido
+    
+class PedidoResumen(BaseModel):
+    id: int
+    usuario: str
+    producto: str
+    cantidad: int
+    estado: str
+    fecha: str
+    direccion: str
 
     class Config:
         orm_mode = True

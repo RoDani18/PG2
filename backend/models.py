@@ -33,6 +33,7 @@ class Pedido(Base):
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)
     producto: Mapped[str] = mapped_column(String(100), nullable=False)
     cantidad: Mapped[int] = mapped_column(nullable=False)
+    direccion: Mapped[str] = mapped_column(String(100), nullable=False)
     estado: Mapped[str] = mapped_column(String(50), default="pendiente")
     producto_id: Mapped[int] = mapped_column(ForeignKey("inventario.id"), nullable=False)
     fecha: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)

@@ -42,13 +42,14 @@ def accion_mostrar_inventario(entidades):
 
 # --- PEDIDOS ---
 def accion_crear_pedido(entidades):
-    cliente = entidades.get("cliente")
-    producto = entidades.get("producto")
+    producto = entidades.get("producto") or entidades.get("nombre")
+    direccion = entidades.get("direccion")
     cantidad = entidades.get("cantidad", 1)
-    if cliente and producto:
-        resultado = crear_pedido(cliente, producto, cantidad)
-        return f"Pedido creado para {cliente} con {cantidad} unidad(es) de {producto}." if resultado else "No se pudo crear el pedido."
+    if producto and direccion:
+        resultado = crear_pedido(producto, cantidad, direccion)
+        return f"Pedido creado con {cantidad} unidad(es) de {producto} para {direccion}." if resultado else "No se pudo crear el pedido."
     return "Faltan datos para crear el pedido."
+
 
 # --- RUTAS ---
 def accion_asignar_ruta(entidades):

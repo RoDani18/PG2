@@ -1,5 +1,7 @@
 import re
 
+from Voz_Asistente import entidades
+
 ARTICULOS_INVALIDOS = {"el", "la", "los", "las", "un", "una", "unos", "unas"}
 
 NUMEROS = {
@@ -7,6 +9,11 @@ NUMEROS = {
     "seis": "6", "siete": "7", "ocho": "8", "nueve": "9", "diez": "10",
     "quince": "15", "veinte": "20", "treinta": "30", "cuarenta": "40",
     "cincuenta": "50", "setenta": "70", "ochenta": "80", "noventa": "90"
+}
+
+PALABRAS_DIRECCION = {
+    "zona", "calle", "colonia", "avenida", "bulevar", "manzana",
+    "lote", "sector", "residencial", "pasaje", "barrio", "cantón", "aldea"
 }
 
 def convertir_numero(valor):
@@ -88,22 +95,41 @@ def extraer_entidades(texto):
     # 🧾 Cliente
     cliente = re.search(r"(?:cliente|para|de parte de)\s+([\w\s]+)", texto)
     if cliente:
-        entidades["cliente"] = limpiar_entidad(cliente.group(1))
+        valor = cliente.group(1).strip().lower()
+        if not any(palabra in valor for palabra in PALABRAS_DIRECCION):
+            entidades["cliente"] = limpiar_entidad(valor)
 
-    # 📍 Dirección
-    direccion = re.search(r"(?:zona|dirección|entregar en)\s+([\w\s\d]+)", texto)
-    if direccion:
-        entidades["direccion"] = direccion.group(1).strip()
+    direccion_match = re.search(r"(?:para|en|hacia|entregar en)\s+(zona\s*\d+|[\w\s]+)", texto)
+    if direccion_match:
+        valor = direccion_match.group(1).strip().lower()
+        if any(p in valor for p in PALABRAS_DIRECCION) or "zona" in valor:
+            entidades["direccion"] = valor
+
 
     # 🆔 Pedido ID
     pedido_id = re.search(r"pedido\s+(\d+)", texto)
     if pedido_id:
         entidades["pedido_id"] = int(pedido_id.group(1))
 
+    # 🚚 Ruta I# 🧠 Patrón robusto para nombre y cantidad en frases tipo "crear pedido arroz dos unidades"
+    pedido_match = re.search(r"(?:crear\s+pedido(?:\s+de)?|agregar\s+pedido(?:\s+de)?|pedido\s+de)\s+([\w\s]+?)\s+(\d+|\w+)\s+(?:unidades|bolsas|sacos)?", texto)
+    if pedido_match:
+        nombre = limpiar_entidad(pedido_match.group(1))
+        cantidad = convertir_numero(pedido_match.group(2))
+        if nombre:
+            entidades["nombre"] = nombre
+            if cantidad and cantidad.isdigit():
+                entidades["cantidad"] = cantidad
+
     # 📦 Estado
     estado = re.search(r"(pendiente|en camino|entregado|cancelado)", texto)
     if estado:
         entidades["estado"] = estado.group(1)
+        
+    # 🧠 Intención inferida por patrón de pedido
+    if "nombre" in entidades and "cantidad" in entidades and "direccion" in entidades:
+        entidades["intencion_forzada"] = "agregar_pedido"
+
 
     # 🧠 Intención forzada (por contexto)
     if "mostrar inventario" in texto or "ver productos" in texto:
@@ -112,5 +138,8 @@ def extraer_entidades(texto):
         entidades["intencion_forzada"] = "listar_pedidos"
     if "listar rutas" in texto or "ver entregas" in texto:
         entidades["intencion_forzada"] = "listar_rutas"
+    # 🧠 Intención robusta para crear pedido
+    if ("crear pedido" in texto or "agregar pedido" in texto or "pedido de" in texto) and "nombre" in entidades and "cantidad" in entidades:
+        entidades["intencion_forzada"] = "agregar_pedido"
 
     return entidades

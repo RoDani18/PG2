@@ -5,7 +5,8 @@ from backend import models
 from backend.auth.deps import get_db, require_roles, get_current_user
 from backend.routers.schemas_pedidos import PedidoCreate, PedidoUpdate, PedidoResponse
 import logging
-
+from backend.routers.schemas_pedidos import PedidoResumen
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/", response_model=List[PedidoResponse])
@@ -15,12 +16,27 @@ def listar_todos(
 ):
     return db.query(models.Pedido).all()
 
-@router.get("/mios", response_model=List[PedidoResponse])
+@router.get("/mios", response_model=List[PedidoResumen])
 def listar_mios(
     user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(models.Pedido).filter(models.Pedido.usuario_id == user.id).all()
+    pedidos = db.query(models.Pedido).filter(models.Pedido.usuario_id == user.id).all()
+    respuesta = []
+    for p in pedidos:
+        usuario_nombre = db.query(models.Usuario).filter_by(id=p.usuario_id).first().username
+        fecha_formateada = p.fecha.strftime("%d/%m/%Y %H:%M")
+        resumen = PedidoResumen(
+            id=p.id,
+            usuario=usuario_nombre,
+            producto=p.producto,
+            cantidad=p.cantidad,
+            estado=p.estado,
+            fecha=fecha_formateada,
+            direccion=p.direccion
+        )
+        respuesta.append(resumen)
+    return respuesta
 
 @router.post("/", response_model=PedidoResponse, status_code=status.HTTP_201_CREATED)
 def crear_pedido(
@@ -28,6 +44,7 @@ def crear_pedido(
     db: Session = Depends(get_db),
     user=Depends(require_roles("cliente","admin"))
 ):
+    logger.info(f"📥 Pedido recibido: producto={pedido_in.producto}, cantidad={pedido_in.cantidad}, direccion={pedido_in.direccion}, usuario={user.id}")
     # ✅ Validar que el producto exista
     producto = db.query(models.Producto).filter_by(nombre=pedido_in.producto).first()
     if not producto:
@@ -39,6 +56,7 @@ def crear_pedido(
         producto=pedido_in.producto,
         producto_id=producto.id,  # ✅ ← ESTE ES EL CAMBIO
         cantidad=pedido_in.cantidad,
+        direccion=pedido_in.direccion,
         estado="pendiente"
     )
     

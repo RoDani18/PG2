@@ -40,10 +40,12 @@ def ejecutar_accion(intencion, entidades, auth_token):
     elif intencion == "consultar_inventario":
         return inventario.consultar_inventario(auth_token)
 
-    elif intencion == "crear_pedido":
-        producto = entidades.get("producto") or input("🛒 Producto: ")
+    elif intencion in {"crear_pedido", "agregar_pedido"}:
+        nombre = entidades.get("nombre") or input("🛒 Producto: ")
         cantidad = entidades.get("cantidad") or int(input("🔢 Cantidad: "))
-        return pedidos.crear_pedido(producto, cantidad, auth_token)
+        direccion = entidades.get("direccion") or input("📍 Dirección: ")
+        return pedidos.crear_pedido(nombre, cantidad, direccion, auth_token)
+
 
     elif intencion == "consultar_pedidos":
         return pedidos.consultar_mis_pedidos(auth_token)

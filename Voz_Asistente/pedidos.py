@@ -4,23 +4,35 @@ BASE_URL = "http://localhost:8000"
 PEDIDOS_URL = f"{BASE_URL}/pedidos"
 
 # 📝 Crear pedido
-def crear_pedido(producto: str, cantidad: int, token: str) -> str:
+def crear_pedido(producto: str, cantidad: int, direccion: str, token: str) -> str:
     try:
         headers = {"Authorization": f"Bearer {token}"}
         payload = {
             "producto": producto,
-            "cantidad": cantidad
+            "cantidad": cantidad,
+            "direccion": direccion
         }
         response = requests.post(PEDIDOS_URL, json=payload, headers=headers)
+
         if response.status_code == 201:
             return f"✅ Pedido de '{producto}' creado con éxito."
+        if not direccion:
+            return "❌ No se detectó la dirección. Por favor, especifica zona o ubicación."
         elif response.status_code == 404:
             return f"⚠️ El producto '{producto}' no existe en el inventario."
         else:
-            return f"❌ Error {response.status_code}: {response.text}"
+            try:
+                error_json = response.json()
+                detalle = error_json.get("detail") or str(error_json)
+            except Exception:
+                detalle = response.text or "Error desconocido"
+                print(f"❌ Error al crear pedido: {response.status_code} - {detalle}")
+                return f"❌ Error al crear pedido: {detalle}"
+
     except Exception as e:
         print("❌ Error al crear pedido:", e)
         return "Error al crear pedido."
+
 
 # 📋 Consultar pedidos del usuario autenticado
 def consultar_mis_pedidos(token: str) -> str:
@@ -54,7 +66,7 @@ def consultar_todos_pedidos(token: str) -> str:
             return "📭 No hay pedidos registrados."
         respuesta = "📋 Pedidos registrados:\n"
         for p in pedidos:
-            respuesta += f"- {p['producto']}: {p['cantidad']} unidades ({p['estado']})\n"
+            respuesta += f"- {p['producto']}: {p['cantidad']} unidades ({p['estado']}) - Producto ID: {p['producto_id']} - Fecha: {p['fecha']}\n"
         return respuesta
     except Exception as e:
         print("❌ Error al consultar todos los pedidos:", e)
