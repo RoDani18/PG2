@@ -1,10 +1,21 @@
+from asyncio.log import logger
+from http.client import HTTPException
 import requests
+
+import db 
+import logging
+logger = logging.getLogger(__name__)
+
+# -*- coding: utf-8 -*-
 
 BASE_URL = "http://localhost:8000"
 PEDIDOS_URL = f"{BASE_URL}/pedidos"
 
 # 📝 Crear pedido
 def crear_pedido(producto: str, cantidad: int, direccion: str, token: str) -> str:
+    if not direccion:
+        return "❌ No se detectó la dirección. Por favor, especifica zona o ubicación."
+
     try:
         headers = {"Authorization": f"Bearer {token}"}
         payload = {
@@ -16,22 +27,22 @@ def crear_pedido(producto: str, cantidad: int, direccion: str, token: str) -> st
 
         if response.status_code == 201:
             return f"✅ Pedido de '{producto}' creado con éxito."
-        if not direccion:
-            return "❌ No se detectó la dirección. Por favor, especifica zona o ubicación."
+
         elif response.status_code == 404:
             return f"⚠️ El producto '{producto}' no existe en el inventario."
+
         else:
             try:
                 error_json = response.json()
                 detalle = error_json.get("detail") or str(error_json)
-            except Exception:
-                detalle = response.text or "Error desconocido"
-                print(f"❌ Error al crear pedido: {response.status_code} - {detalle}")
-                return f"❌ Error al crear pedido: {detalle}"
+            except Exception as e:
+                detalle = response.text or f"Error desconocido ({e})"
+            print(f"❌ Error al crear pedido: {response.status_code} - {detalle}")
+            return f"❌ Error al crear pedido: {detalle}"
 
     except Exception as e:
         print("❌ Error al crear pedido:", e)
-        return "Error al crear pedido."
+        return f"❌ Error al crear pedido: {str(e)}"
 
 
 # 📋 Consultar pedidos del usuario autenticado
@@ -87,6 +98,8 @@ def actualizar_estado_pedido(pedido_id: int, nuevo_estado: str, token: str) -> s
     except Exception as e:
         print("❌ Error al actualizar pedido:", e)
         return "Error al actualizar pedido."
+    
+
 
 # 🗑️ Eliminar pedido
 def eliminar_pedido(pedido_id: int, token: str) -> str:
@@ -246,3 +259,4 @@ def ver_reporte_pedidos(periodo: str, token: str) -> str:
 
 def modificar_pedido(pedido_id: int, nueva_cantidad: int, token: str) -> str:
     return modificar_pedido_cliente(pedido_id, nueva_cantidad, token)
+

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from backend import models
 from backend.auth.deps import get_db, require_roles, get_current_user
-from backend.routers.schemas_pedidos import PedidoCreate, PedidoUpdate, PedidoResponse
+from backend.routers.schemas_pedidos import MovimientoInventarioResponse, PedidoCreate, PedidoUpdate, PedidoResponse
 import logging
 from backend.routers.schemas_pedidos import PedidoResumen
 logger = logging.getLogger(__name__)
@@ -60,14 +60,16 @@ def crear_pedido(
         estado="pendiente"
     )
     
-    
+    logger.info(f"📥 Pedido recibido: producto={pedido_in.producto}, cantidad={pedido_in.cantidad}, direccion={pedido_in.direccion}, usuario={user.id}")
     db.add(pedido)
     try:
         db.commit()
         db.refresh(pedido)
-    except Exception:
+    except Exception as e:
         db.rollback()
-        raise
+        logger.error(f"❌ Error en pedido: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
     return pedido
 
 
@@ -123,9 +125,11 @@ def actualizar_pedido(
     try:
         db.commit()
         db.refresh(ped)
-    except Exception:
+    except Exception as e:
         db.rollback()
-        raise
+        logger.error(f"❌ Error en pedido: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
     return ped
 
 @router.put("/cliente/{pedido_id}", response_model=PedidoResponse)
@@ -163,9 +167,11 @@ def eliminar_pedido(
     db.delete(ped)
     try:
         db.commit()
-    except Exception:
+    except Exception as e:
         db.rollback()
-        raise
+        logger.error(f"❌ Error en pedido: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
     return None
 
 @router.get("/{pedido_id}", response_model=PedidoResponse)
@@ -178,4 +184,34 @@ def obtener_pedido_por_id(
     if not ped:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     return ped
+
+@router.get("/cliente/{cliente_id}", response_model=List[PedidoResponse])
+def pedidos_por_cliente(cliente_id: int, db: Session = Depends(get_db), user=Depends(require_roles("admin", "empleado"))):
+    return db.query(models.Pedido).filter_by(usuario_id=cliente_id).all()
+
+@router.get("/historial/{cliente_id}", response_model=List[PedidoResponse])
+def historial_pedidos(cliente_id: int, db: Session = Depends(get_db), user=Depends(require_roles("admin", "empleado"))):
+    return db.query(models.Pedido).filter_by(usuario_id=cliente_id).order_by(models.Pedido.fecha.desc()).all()
+
+@router.get("/reportes/globales")
+def generar_reporte_global(periodo: str = "último mes", db: Session = Depends(get_db), user=Depends(require_roles("admin"))):
+    # Simulación de filtro por periodo
+    pedidos = db.query(models.Pedido).filter(models.Pedido.fecha >= calcular_fecha_desde(periodo)).all()
+    return {"mensaje": f"Reporte generado para {periodo}", "total": len(pedidos)}
+
+def calcular_fecha_desde(periodo: str):
+    from datetime import datetime, timedelta
+    ahora = datetime.utcnow()
+    if periodo == "último mes":
+        return ahora - timedelta(days=30)
+    elif periodo == "último trimestre":
+        return ahora - timedelta(days=90)
+    elif periodo == "último año":
+        return ahora - timedelta(days=365)
+    return ahora - timedelta(days=30)  # Por defecto, último mes
+
+@router.get("/movimientos", response_model=List[MovimientoInventarioResponse])
+def ver_movimientos(db: Session = Depends(get_db), user=Depends(require_roles("admin", "empleado"))):
+    return db.query(models.MovimientoInventario).order_by(models.MovimientoInventario.fecha.desc()).all()
+
 

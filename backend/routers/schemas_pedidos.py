@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 
+
 # Estados válidos para pedidos
 ESTADOS_VALIDOS = ('pendiente', 'enviado', 'entregado', 'cancelado')
 
@@ -38,6 +39,17 @@ class PedidoResumen(BaseModel):
     estado: str
     fecha: str
     direccion: str
+
+    class Config:
+        orm_mode = True
+
+class MovimientoInventarioResponse(BaseModel):
+    id: int
+    producto_id: int
+    tipo: str
+    cantidad: int
+    fecha: datetime
+    pedido_id: Optional[int]
 
     class Config:
         orm_mode = True

@@ -182,6 +182,7 @@ def ejecutar_comando(
         if match:
             precio = match.group(1)
 
+
     # 🧠 Fallback para frases no entendidas
     if not intencion or intencion == "no_entendida":
         db = SessionLocal()
@@ -198,6 +199,8 @@ def ejecutar_comando(
         db.close()
         return {"respuesta": "⚠️ No entendí el comando. Lo guardaré para mejorar."}
 
+    intencion = entidades.get("intencion_forzada") or intencion
+    print(f"🔧 Intención final a ejecutar: {intencion}")
     # 🎯 Ejecución por intención
     try:
         from Voz_Asistente import inventario, pedidos
@@ -231,38 +234,16 @@ def ejecutar_comando(
                 return {"respuesta": "⚠️ No se detectó el cliente para consultar inventario."}
             return {"respuesta": inventario.consultar_inventario_por_cliente(cliente_id, token)}
 
-        elif intencion == "crear_pedido":
-            if user.rol not in ["cliente", "admin"]:
-                return {"respuesta": "⚠️ Solo clientes o administradores pueden crear pedidos por voz."}
-            
-            if cantidad is None:
-                from word2number import w2n
-                
-                try:
-                    cantidad = w2n.word_to_num(texto.split(" de ")[1].split()[0])
-                except:
-                    match = re.search(r"cantidad(?: de)? (\d+)", texto)
-                    if match:
-                        cantidad = match.group(1)
-                        
-                        return {"respuesta": pedidos.crear_pedido(nombre, int(cantidad), token)}
-
         elif intencion == "agregar_pedido":
             if user.rol not in ["cliente", "admin"]:
                 return {"respuesta": "⚠️ Solo clientes o administradores pueden crear pedidos por voz."}
             
-            if cantidad is None:
-                from word2number import w2n
-                
-                try:
-                    cantidad = w2n.word_to_num(texto.split(" de ")[1].split()[0])
-                except:
-                    match = re.search(r"cantidad(?: de)? (\d+)", texto)
-                    if match:
-                        cantidad = match.group(1)
-                        
-                        return {"respuesta": pedidos.crear_pedido(nombre, int(cantidad), token)}
-
+            direccion = entidades.get("direccion")
+            if not nombre or not cantidad or not direccion:
+                return {"respuesta": "⚠️ Faltan datos para crear el pedido."}
+            
+            print(f"📦 Ejecutando pedido: producto={nombre}, cantidad={cantidad}, direccion={direccion}")
+            return {"respuesta": pedidos.crear_pedido(nombre, int(cantidad), direccion, token)}
 
         elif intencion == "ver_pedido":
             return {"respuesta": pedidos.ver_pedido(token)}
