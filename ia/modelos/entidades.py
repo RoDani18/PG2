@@ -41,7 +41,6 @@ def extraer_entidades(texto):
 
     # 🧮 Cantidad
     cantidad_match = re.search(r"(?:pedido\s+[\w\s]+?\s+)?(\d+)\s+(?:unidades|bolsas|sacos|bultos)?", texto)
-
     if cantidad_match:
         cantidad = convertir_numero(cantidad_match.group(1))
         if cantidad and cantidad.isdigit():
