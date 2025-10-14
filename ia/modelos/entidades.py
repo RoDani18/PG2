@@ -40,7 +40,8 @@ def extraer_entidades(texto):
     entidades = {}
 
     # 🧮 Cantidad
-    cantidad_match = re.search(r"(?:cantidad\s*[:=]?\s*|agrega\s*|actualiza\s*|añade\s*|modifica\s*)?(\d+|\w+)\s+(?:unidades|bolsas|sacos|bultos)?", texto)
+    cantidad_match = re.search(r"(?:pedido\s+[\w\s]+?\s+)?(\d+)\s+(?:unidades|bolsas|sacos|bultos)?", texto)
+
     if cantidad_match:
         cantidad = convertir_numero(cantidad_match.group(1))
         if cantidad and cantidad.isdigit():
@@ -259,6 +260,18 @@ def extraer_entidades(texto):
             nombre = limpiar_entidad(nombre_match.group(1))
             if nombre:
                 entidades["cliente_nombre"] = nombre
+    # 🧭 Ver ruta del pedido
+    if re.search(r"(ver|consultar|mostrar)\s+ruta\s+(del\s+)?pedido\s+\d+", texto):
+        entidades["intencion_forzada"] = "ver_ruta"
+        match = re.search(r"pedido\s+(\d+)", texto)
+        if match:
+            entidades["pedido_id"] = int(match.group(1))
+
+# 🗣 Alternativa: "¿Por dónde viene mi pedido?"
+    if re.search(r"(por\s+dónde\s+viene\s+mi\s+pedido|ruta\s+actual\s+del\s+pedido)", texto):
+        entidades["intencion_forzada"] = "ver_ruta"
+    # Si ya tenés el pedido_id en sesión, lo podés inyectar desde el frontend
+
 
     # 🧠 Intención forzada (por contexto)
     if "mostrar inventario" in texto or "ver productos" in texto:

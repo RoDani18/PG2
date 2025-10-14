@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from backend import models
 from backend.auth.deps import get_db, require_roles, get_current_user
-from backend.routers.schemas_pedidos import MovimientoInventarioResponse, PedidoCreate, PedidoUpdate, PedidoResponse
+from backend.routers.schemas_pedidos import MovimientoInventarioResponse, PedidoConRuta, PedidoCreate, PedidoUpdate, PedidoResponse
 import logging
 from backend.routers.schemas_pedidos import PedidoResumen
 logger = logging.getLogger(__name__)
@@ -215,3 +215,10 @@ def ver_movimientos(db: Session = Depends(get_db), user=Depends(require_roles("a
     return db.query(models.MovimientoInventario).order_by(models.MovimientoInventario.fecha.desc()).all()
 
 
+@router.get("/pedido/{pedido_id}/detalle_completo", response_model=PedidoConRuta)
+def detalle_completo(pedido_id: int, db: Session = Depends(get_db)):
+    pedido = db.query(models.Pedido).filter_by(id=pedido_id).first()
+    ruta = db.query(models.Ruta).filter_by(pedido_id=pedido_id).order_by(models.Ruta.id.desc()).first()
+    if not pedido or not ruta:
+        raise HTTPException(404, "Pedido o ruta no encontrada")
+    return {"pedido": pedido, "ruta": ruta}

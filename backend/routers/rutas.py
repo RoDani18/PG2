@@ -4,7 +4,7 @@ from typing import List
 from backend import models
 from backend.auth.deps import get_db, require_roles
 from backend.routers.schemas_rutas import RutaCreate, RutaUpdate, RutaResponse
-
+import requests
 router = APIRouter()
 
 @router.get("/", response_model=List[RutaResponse])
@@ -70,3 +70,35 @@ def seguimiento(
     if not ruta:
         raise HTTPException(404, "Ruta no encontrada")
     return ruta
+
+def obtener_direccion_desde_gps(lat, lng):
+    try:
+        url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}"
+        response = requests.get(url)
+        data = response.json()
+        direccion = data.get("display_name", "ubicación desconocida")
+        return direccion
+    except Exception as e:
+        print("❌ Error al obtener dirección:", e)
+        return "ubicación desconocida"
+    
+from backend.routers.schemas_rutas import RutaReprogramar
+
+@router.put("/{ruta_id}/reprogramar")
+def reprogramar_ruta(
+    ruta_id: int,
+    datos: RutaReprogramar,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("empleado", "admin"))
+):
+    ruta = db.query(models.Ruta).filter(models.Ruta.id == ruta_id).first()
+    if not ruta:
+        raise HTTPException(status_code=404, detail="Ruta no encontrada")
+    if ruta.estado == "cancelada":
+        raise HTTPException(status_code=400, detail="No se puede reprogramar una ruta cancelada")
+
+    ruta.destino = datos.nuevo_destino
+    ruta.tiempo_estimado = datos.nuevo_tiempo
+    ruta.estado = "reprogramada"
+    db.commit()
+    return {"mensaje": f"Ruta {ruta_id} reprogramada correctamente"}

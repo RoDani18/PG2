@@ -315,6 +315,17 @@ def ejecutar_comando(
             if not pedido_id or not nuevo_estado:
                 return {"respuesta": "⚠️ Faltan datos para actualizar el estado del pedido."}
             return {"respuesta": pedidos.actualizar_estado_pedido(pedido_id, nuevo_estado, token)}
+        
+        elif intencion == "ver_ruta":
+            pedido_id = entidades.get("pedido_id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido para consultar la ruta."}
+
+            if user.rol not in ["admin", "empleado", "cliente"]:
+                return {"respuesta": "⚠️ Solo clientes, empleados o administradores pueden consultar rutas."}
+
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.resumen_ruta_pedido(pedido_id, token)}
 
         else:
             return {"respuesta": f"⚠️ Intención '{intencion}' no ejecutable."}

@@ -1,33 +1,34 @@
-from pydantic import BaseModel, Field, confloat
-from typing import Optional, Annotated
+from pydantic import BaseModel
+from typing import Optional
 
-# Validación para estado con regex (Pydantic v2)
-EstadoRutaType = Annotated[str, Field(pattern="^(en_ruta|retrasado|entregado)$")]
-
-# Validación para coordenadas
-LatType = Annotated[float, Field(ge=-90, le=90)]
-LngType = Annotated[float, Field(ge=-180, le=180)]
-
-class RutaBase(BaseModel):
+# 🆕 Crear ruta
+class RutaCreate(BaseModel):
     pedido_id: int
-    destino: str = Field(..., min_length=1)
+    destino: str
+    tiempo_estimado: str
 
-class RutaCreate(RutaBase):
-    lat_actual: Optional[LatType] = None
-    lng_actual: Optional[LngType] = None
-    tiempo_estimado: Optional[str] = None
-
+# 🔄 Actualizar posición GPS o estado
 class RutaUpdate(BaseModel):
-    lat_actual: Optional[LatType] = None
-    lng_actual: Optional[LngType] = None
-    estado: Optional[EstadoRutaType] = None
+    lat_actual: Optional[float] = None
+    lng_actual: Optional[float] = None
+    estado: Optional[str] = None
     tiempo_estimado: Optional[str] = None
+    destino: Optional[str] = None
 
-class RutaResponse(RutaBase):
+# 📦 Respuesta completa
+class RutaResponse(BaseModel):
     id: int
+    pedido_id: int
+    destino: str
+    estado: str
+    tiempo_estimado: str
     lat_actual: Optional[float]
     lng_actual: Optional[float]
-    estado: str
-    tiempo_estimado: Optional[str]
 
-    model_config = {"from_attributes": True}
+    class Config:
+        orm_mode = True
+
+# 🔁 Reprogramar ruta
+class RutaReprogramar(BaseModel):
+    nuevo_destino: str
+    nuevo_tiempo: str
