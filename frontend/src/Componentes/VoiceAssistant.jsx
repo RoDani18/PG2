@@ -655,6 +655,34 @@ if (command.includes("descargar historial de pedidos")) {
 // ➕ Asignar ruta
 if (command.toLowerCase().includes("asignar ruta")) {
   const pedidoId = prompt("📝 ID del pedido:");
+  const direccion = prompt("📍 Dirección de entrega:");
+  try {
+    const res = await axios.post("/rutas/gps", { pedido_id: pedidoId, direccion });
+    const { distancia_km, tiempo_min, lat, lng, ruta } = res.data;
+
+    const msg = `🚚 Ruta asignada al pedido ${pedidoId} hacia ${direccion}. 🛣️ Distancia: ${distancia_km} km | Tiempo estimado: ${tiempo_min} minutos.`;
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
+    hablar(msg);
+
+    localStorage.setItem("lat", lat);
+    localStorage.setItem("lng", lng);
+    localStorage.setItem("destino", direccion);
+    localStorage.setItem("tiempo", `${tiempo_min} minutos`);
+    localStorage.setItem("ruta", JSON.stringify(ruta));  // ✅ ahora sí existe
+
+    window.dispatchEvent(new Event("mostrarMapaRuta"));
+    window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
+  } catch {
+    const error = "❌ Error al asignar ruta GPS.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+  }
+  return;
+}
+
+
+if (command.toLowerCase().includes("asignar ruta manual")) {
+  const pedidoId = prompt("📝 ID del pedido:");
   const destino = prompt("📍 Dirección de entrega:");
   const tiempo = prompt("⏱️ Tiempo estimado:");
   try {
@@ -669,6 +697,7 @@ if (command.toLowerCase().includes("asignar ruta")) {
   }
   return;
 }
+
 
 // 🧭 Rastrear ruta
 if (command.toLowerCase().includes("rastrear ruta")) {

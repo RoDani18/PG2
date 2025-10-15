@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
+from Voz_Asistente.rutas import asignar_ruta, actualizar_ruta, seguimiento_ruta_cliente, rutas_por_pedido, calcular_ruta_gps,obtener_coordenadas
 from backend import models
 from backend.auth.deps import get_db, require_roles
 from backend.routers.schemas_rutas import RutaCreate, RutaUpdate, RutaResponse
@@ -102,3 +104,27 @@ def reprogramar_ruta(
     ruta.estado = "reprogramada"
     db.commit()
     return {"mensaje": f"Ruta {ruta_id} reprogramada correctamente"}
+
+class RutaGPS(BaseModel):
+    pedido_id: int
+    direccion: str
+    
+@router.post("/gps")
+def asignar_ruta_gps(data: RutaGPS):
+    origen = [-90.5133, 14.6099]  # San Miguel Petapa
+    destino_coords = obtener_coordenadas(data.direccion)
+    if not destino_coords:
+        return {"error": "No se pudo obtener coordenadas del destino."}
+
+    distancia, duracion, ruta_formateada = calcular_ruta_gps(origen, destino_coords)
+    
+    return {
+    "pedido_id": data.pedido_id,
+    "direccion": data.direccion,
+    "distancia_km": round(distancia, 1),
+    "tiempo_min": round(duracion, 1),
+    "lat": destino_coords[1],
+    "lng": destino_coords[0],
+    "ruta": ruta_formateada  
+}
+

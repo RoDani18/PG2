@@ -190,8 +190,9 @@ def extraer_entidades(texto):
             entidades["producto"] = producto
 
     # 📍 Dirección
-    direccion_match = re.search(r"(?:dirección|entregar en)\s+(?:a\s+)?([\w\s]+)", texto)
+        direccion_match = re.search(r"(zona\s*\d{1,2})", texto)
     if direccion_match:
+        entidades["direccion"] = direccion_match.group(1).strip().lower()
         direccion = direccion_match.group(1).strip().lower()
         if any(p in direccion for p in PALABRAS_DIRECCION) or "zona" in direccion:
             entidades["direccion"] = direccion
@@ -200,6 +201,7 @@ def extraer_entidades(texto):
     nombre = entidades.get("nombre")
     if nombre and re.search(r"estado\s+del\s+pedido", nombre):
         entidades.pop("nombre", None)
+        
 
 
     # 🧠 Ver pedido detallado
@@ -270,6 +272,14 @@ def extraer_entidades(texto):
     if re.search(r"(por\s+dónde\s+viene\s+mi\s+pedido|ruta\s+actual\s+del\s+pedido)", texto):
         entidades["intencion_forzada"] = "ver_ruta"
     # Si ya tenés el pedido_id en sesión, lo podés inyectar desde el frontend
+    
+    # 🧠 Asignar ruta al pedido
+    if re.search(r"(asignar|poner|dar)\s+ruta", texto):
+        entidades["intencion_forzada"] = "asignar_ruta"
+
+    if re.search(r"(qué\s+ruta\s+le\s+toc(a|ó)|ruta\s+para\s+zona)", texto):
+        entidades["intencion_forzada"] = "asignar_ruta"
+
 
 
     # 🧠 Intención forzada (por contexto)
@@ -312,6 +322,11 @@ def extraer_entidades(texto):
     # 🧠 Intención contextual para descargar reportes globales
     if "descargar reportes globales" in texto or "generar reporte global" in texto:
         entidades["intencion_forzada"] = "descargar_reportes_globales"
+    # 🧠 Si hay dirección pero no intención, y texto menciona ruta
+    if "direccion" in entidades and "intencion_forzada" not in entidades:
+        if "ruta" in texto:
+            entidades["intencion_forzada"] = "asignar_ruta"
+
 
 
     return entidades

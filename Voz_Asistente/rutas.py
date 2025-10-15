@@ -1,4 +1,5 @@
 import requests
+import openrouteservice
 
 BASE_URL = "http://localhost:8000"
 RUTAS_URL = f"{BASE_URL}/rutas"
@@ -20,7 +21,44 @@ def consultar_rutas(token: str) -> str:
         print("❌ Error al consultar rutas:", e)
         return "No pude consultar las rutas."
 
-import requests
+def calcular_ruta_gps(origen, destino):
+    client = openrouteservice.Client(key="eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YWVkNWE2MmY3MDQ3NzI5OGZlYWE4ZWU2ZTVkNGQ2IiwiaCI6Im11cm11cjY0In0=")
+    coords = [origen, destino]
+    ruta = client.directions(coords, profile='driving-car', format='geojson')
+
+    resumen = ruta['features'][0]['properties']['summary']
+    distancia = resumen['distance'] / 1000
+    duracion = resumen['duration'] / 60
+
+    # Extraer coordenadas paso a paso
+    pasos = ruta['features'][0]['geometry']['coordinates']  # [[lng, lat], [lng, lat], ...]
+
+    # Convertir a formato Leaflet: [[lat, lng], [lat, lng], ...]
+    ruta_formateada = [[p[1], p[0]] for p in pasos]
+
+    return distancia, duracion, ruta_formateada
+
+
+def obtener_coordenadas(direccion: str):
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={direccion}, Guatemala"
+    headers = {"User-Agent": "RutaAsistente/1.0"}
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    if data:
+        lat = float(data[0]["lat"])
+        lon = float(data[0]["lon"])
+        return [lon, lat]
+    return None
+
+def asignar_ruta_por_direccion(direccion: str, token: str) -> str:
+    origen = [-90.5, 14.6]  # Ejemplo: ubicación del centro de distribución
+    destino_coords = obtener_coordenadas(direccion)
+    if not destino_coords:
+        return "❌ No se pudo obtener coordenadas del destino."
+
+    resumen = calcular_ruta_gps(origen, destino_coords)
+    return f"🚚 {resumen} | Destino: {direccion}"
+
 
 # 🌍 Geocodificación inversa con OpenStreetMap
 def obtener_direccion_desde_gps(lat, lng):
@@ -143,3 +181,4 @@ def rutas_por_pedido(pedido_id: int, token: str) -> str:
 
 def cancelar_ruta(ruta_id: int, token: str) -> str:
     return actualizar_ruta(ruta_id, estado="cancelado", token=token)
+

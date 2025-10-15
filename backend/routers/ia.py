@@ -326,9 +326,22 @@ def ejecutar_comando(
 
             from Voz_Asistente import rutas
             return {"respuesta": rutas.resumen_ruta_pedido(pedido_id, token)}
+        
+        elif intencion == "asignar_ruta":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo administradores o empleados pueden asignar rutas."}
+            
+            direccion = entidades.get("direccion")
+            if not direccion:
+                return {"respuesta": "⚠️ No se detectó la dirección para asignar la ruta."}
+
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.asignar_ruta_por_direccion(direccion, token)}
+
 
         else:
             return {"respuesta": f"⚠️ Intención '{intencion}' no ejecutable."}
+        
 
     except Exception as e:
         return {"respuesta": f"❌ Error al ejecutar '{intencion}': {str(e)}"}
