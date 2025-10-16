@@ -511,54 +511,46 @@ try {
   hablar(errorMsg);
 }
 
-// 🔄 Actualizar estado del pedido
-try {
-  const res = await axios.post("/ia/ejecutar-comando", { texto: command });
-  const respuesta = res.data.respuesta;
 
-  const comandoEsSoloActualizar = command.trim().toLowerCase() === "actualizar estado";
+const comandoLimpio = command.trim().toLowerCase();
 
-  // 🧠 Detectar si ya se actualizó por voz
-  const yaActualizoPorVoz =
-    respuesta.toLowerCase().includes("pedido actualizado") ||
-    respuesta.toLowerCase().includes("actualizado a estado") ||
-    respuesta.toLowerCase().includes("intención: actualizar_estado_pedido");
-
-  // ✅ Mostrar solo el mensaje de éxito si ya se ejecutó por voz
-  if (yaActualizoPorVoz) {
-    setHistorial([...historial, { tipo: "asistente", texto: respuesta }]);
-    hablar(respuesta);
-    return; // ⛔ Cortar ejecución completa
+if (/actualizar\s+estado\s+del\s+pedido\s+\d+\s+a\s+\w+/.test(comandoLimpio)) {
+  const match = comandoLimpio.match(/pedido\s+(\d+)\s+a\s+(\w+)/);
+  if (!match) {
+    const error = "⚠️ No se detectó el ID o el nuevo estado.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+    return;
   }
 
-  // 🔄 Mostrar prompt solo si el usuario dijo literalmente "actualizar estado"
-  if (comandoEsSoloActualizar) {
-    const id = prompt("🔄 ID del pedido:");
-    const estado = prompt("📦 Nuevo estado (pendiente, entregado, cancelado):");
-    if (!id || !estado) return;
+  const pedidoId = match[1];
+  const nuevoEstado = match[2];
 
-    try {
-      await axios.patch(`/pedidos/${id}`, { estado });
-      const msg = `🔄 Pedido ${id} actualizado a estado '${estado}'.`;
-      setHistorial([...historial, { tipo: "asistente", texto: msg }]);
-      hablar(msg);
-    } catch {
-      const error = "❌ Error al actualizar estado.";
-      setHistorial([...historial, { tipo: "asistente", texto: error }]);
-      hablar(error);
-    }
-    return; // ⛔ Cortar ejecución completa
+  const estadosValidos = ["pendiente", "enviado", "entregado", "cancelado"];
+  if (!estadosValidos.includes(nuevoEstado)) {
+    const error = `⚠️ Estado '${nuevoEstado}' no es válido. Usa: ${estadosValidos.join(", ")}.`;
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+    return;
   }
 
-  // 🧠 Mostrar respuesta del asistente si no fue actualización por voz ni prompt
-  setHistorial([...historial, { tipo: "asistente", texto: respuesta }]);
-  hablar(respuesta);
-} catch (error) {
-  const errorMsg = "❌ Error al procesar el comando.";
-  setHistorial([...historial, { tipo: "asistente", texto: errorMsg }]);
-  hablar(errorMsg);
+  try {
+    const token = localStorage.getItem("token");
+    await axios.put(`/pedidos/${pedidoId}`, { estado: nuevoEstado }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const msg = `✅ Estado del pedido ${pedidoId} actualizado a '${nuevoEstado}'.`;
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
+    hablar(msg);
+  } catch {
+    const error = `❌ No se pudo actualizar el estado del pedido ${pedidoId}.`;
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+  }
+
+  return; // ⛔ Cortar ejecución aquí
 }
-
 
 // ✏️ Editar pedido
 if (command.includes("editar pedido")) {
