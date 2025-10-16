@@ -40,7 +40,8 @@ def calcular_ruta_gps(origen, destino):
 
 
 def obtener_coordenadas(direccion: str):
-    url = f"https://nominatim.openstreetmap.org/search?format=json&q={direccion}, Guatemala"
+    direccion_completa = f"{direccion}, Ciudad de Guatemala, Guatemala"
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={direccion_completa}"
     headers = {"User-Agent": "RutaAsistente/1.0"}
     response = requests.get(url, headers=headers)
     data = response.json()
@@ -49,6 +50,7 @@ def obtener_coordenadas(direccion: str):
         lon = float(data[0]["lon"])
         return [lon, lat]
     return None
+
 
 def asignar_ruta_por_direccion(direccion: str, token: str) -> str:
     origen = [-90.5, 14.6]  # Ejemplo: ubicación del centro de distribución

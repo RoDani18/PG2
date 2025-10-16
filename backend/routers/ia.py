@@ -36,6 +36,7 @@ def get_db():
     finally:
         db.close()
 
+
 class TextoIn(BaseModel):
     texto: str = Field(..., min_length=1, max_length=500)
 

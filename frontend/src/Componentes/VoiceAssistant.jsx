@@ -11,6 +11,9 @@ export default function VoiceAssistant() {
   const [permisoBloqueado, setPermisoBloqueado] = useState(false);
   const recognitionRef = useRef(null);
   const [rol, setRol] = useState(localStorage.getItem("rol") || "anonimo");
+  const [mostrarConfirmacionUbicacion, setMostrarConfirmacionUbicacion] = useState(false);
+const [ubicacionConfirmada, setUbicacionConfirmada] = useState(false);
+
   useEffect(() => {
     const r = localStorage.getItem("rol");
     if (r) setRol(r);
@@ -656,8 +659,35 @@ if (command.includes("descargar historial de pedidos")) {
 if (command.toLowerCase().includes("asignar ruta")) {
   const pedidoId = prompt("📝 ID del pedido:");
   const direccion = prompt("📍 Dirección de entrega:");
+  const confirmar = (mensaje) => {
+  return window.confirm(mensaje);
+};
+
+
+  // 🧭 Capturar ubicación real
+  const usarUbicacion = confirmar("📍 ¿Usar tu ubicación actual como punto de partida?");
+  let origen = [-90.5133, 14.6099]; // Default: San Miguel Petapa
+
+  if (usarUbicacion && navigator.geolocation) {
+    await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        localStorage.setItem("origen_lat", lat);
+        localStorage.setItem("origen_lng", lng);
+        origen = [lng, lat]; // Formato OpenRouteService: [lng, lat]
+        resolve();
+      }, () => resolve()); // Si falla, sigue con default
+    });
+  }
+
   try {
-    const res = await axios.post("/rutas/gps", { pedido_id: pedidoId, direccion });
+    const res = await axios.post("/rutas/gps", {
+      pedido_id: pedidoId,
+      direccion,
+      origen
+    });
+
     const { distancia_km, tiempo_min, lat, lng, ruta } = res.data;
 
     const msg = `🚚 Ruta asignada al pedido ${pedidoId} hacia ${direccion}. 🛣️ Distancia: ${distancia_km} km | Tiempo estimado: ${tiempo_min} minutos.`;
@@ -668,7 +698,7 @@ if (command.toLowerCase().includes("asignar ruta")) {
     localStorage.setItem("lng", lng);
     localStorage.setItem("destino", direccion);
     localStorage.setItem("tiempo", `${tiempo_min} minutos`);
-    localStorage.setItem("ruta", JSON.stringify(ruta));  // ✅ ahora sí existe
+    localStorage.setItem("ruta", JSON.stringify(ruta));
 
     window.dispatchEvent(new Event("mostrarMapaRuta"));
     window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
