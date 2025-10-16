@@ -11,15 +11,24 @@ def consultar_rutas(token: str) -> str:
         response = requests.get(RUTAS_URL, headers=headers)
         response.raise_for_status()
         rutas = response.json()
+
         if not rutas:
             return "📭 No hay rutas registradas."
+
         respuesta = "📍 Rutas activas:\n"
         for r in rutas:
-            respuesta += f"- Pedido {r['pedido_id']}: {r['destino']} ({r['estado']})\n"
+            pedido = r.get("pedido_id", "¿?")
+            destino = r.get("destino", "desconocido")
+            estado = r.get("estado", "sin estado")
+            tiempo = r.get("tiempo_estimado", "sin tiempo")
+            respuesta += f"- Pedido {pedido} → {destino} | Estado: {estado} | Tiempo: {tiempo}\n"
+
         return respuesta
+
     except Exception as e:
         print("❌ Error al consultar rutas:", e)
-        return "No pude consultar las rutas."
+        return "❌ No pude consultar las rutas generales."
+
 
 def calcular_ruta_gps(origen, destino):
     client = openrouteservice.Client(key="eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YWVkNWE2MmY3MDQ3NzI5OGZlYWE4ZWU2ZTVkNGQ2IiwiaCI6Im11cm11cjY0In0=")
@@ -171,16 +180,23 @@ def rutas_por_pedido(pedido_id: int, token: str) -> str:
         response = requests.get(f"{RUTAS_URL}/pedido/{pedido_id}", headers=headers)
         response.raise_for_status()
         rutas = response.json()
+
         if not rutas:
             return f"📭 No hay rutas asignadas al pedido {pedido_id}."
-        respuesta = f"📦 Rutas para el pedido {pedido_id}:\n"
-        for r in rutas:
-            respuesta += f"- Destino: {r['destino']} | Estado: {r['estado']} | Tiempo estimado: {r['tiempo_estimado']}\n"
-        return respuesta
+
+        # 🧭 Mostrar solo la última ruta
+        r = rutas[-1]
+        destino = r.get("destino", "desconocido")
+        estado = r.get("estado", "sin estado")
+        tiempo = r.get("tiempo_estimado", "sin tiempo")
+
+        return f"🧭 Pedido {pedido_id} va por {destino}. Estado: {estado}. Tiempo estimado: {tiempo}."
+
     except Exception as e:
         print("❌ Error al consultar rutas por pedido:", e)
-        return "No pude consultar las rutas de ese pedido."
+        return f"❌ No pude consultar la ruta del pedido {pedido_id}."
 
+# ❌ Cancelar ruta (empleado/admin)
 def cancelar_ruta(ruta_id: int, token: str) -> str:
     return actualizar_ruta(ruta_id, estado="cancelado", token=token)
 

@@ -1,14 +1,20 @@
 import VoiceAssistant from "./VoiceAssistant";
-import axios from "axios";
-import { useState } from "react";
 import MapaRutas from "./MapaRutas";
+import axios from "axios";
+import { useState, useEffect } from "react";
 
-export default function PanelAdmin() {
+export default function PanelEmpleado() {
   const [modoOscuro, setModoOscuro] = useState(false);
-  const [mostrarMapa, setMostrarMapa] = useState(false);
   const [mensajeIA, setMensajeIA] = useState("");
-  setTimeout(() => setMensajeIA(""), 5000); // se cierra en 4 segundos
-  const [rutaGenerada, setRutaGenerada] = useState(false);
+  const [mostrarMapa, setMostrarMapa] = useState(false);
+
+  useEffect(() => {
+    const mostrar = () => setMostrarMapa(true);
+    window.addEventListener("abrirMapaDesdeAsistente", mostrar);
+    return () => window.removeEventListener("abrirMapaDesdeAsistente", mostrar);
+  }, []);
+
+  setTimeout(() => setMensajeIA(""), 5000); // se cierra en 5 segundos
 
   const reentrenarIA = async () => {
     try {
@@ -24,18 +30,13 @@ export default function PanelAdmin() {
     }
   };
 
-  const generarRuta = () => {
-    setRutaGenerada(true);
-    setMostrarMapa(true);
-  };
-
   const descargarReporte = () => {
-    // Simulación de descarga
     alert("📥 Reporte descargado correctamente.");
   };
 
   return (
     <div className={`min-h-screen transition-all duration-300 ${modoOscuro ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-800"}`}>
+      
       {/* 🔝 Panel superior */}
       <header className="p-6 flex flex-wrap justify-between items-center gap-4 border-b border-gray-300">
         <h1 className="text-3xl font-bold">🧠 Panel de Empleado</h1>
@@ -58,12 +59,6 @@ export default function PanelAdmin() {
           >
             🔁 Reentrenar IA
           </button>
-          <button
-            onClick={() => setMostrarMapa(true)}
-            className={`px-4 py-2 rounded ${modoOscuro ? "bg-green-500 hover:bg-green-600" : "bg-green-600 hover:bg-green-700"} text-white`}
-          >
-            🗺️ Ver Mapa
-          </button>
         </div>
       </header>
 
@@ -74,8 +69,10 @@ export default function PanelAdmin() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
             {[
               "consultar inventario", "agregar producto", "actualizar producto", "eliminar producto",
-               "ver pedido", "eliminar pedido", "detalles pedido",
-              "ver ruta", "estado ruta", "asignar ruta", "cancelar ruta"
+              "ver producto cantidad", "precio del producto",
+              "ver pedido", "actualizar estado del pedido",
+              "ver ruta", "seguimiento ruta", "rastrear ruta", "ver rutas",
+              "asignar ruta", "cancelar ruta", "reprogramar ruta"
             ].map((cmd, i) => (
               <span key={i} className={`px-2 py-1 rounded ${modoOscuro ? "bg-gray-700" : "bg-gray-100"}`}>{cmd}</span>
             ))}
@@ -85,15 +82,14 @@ export default function PanelAdmin() {
 
       {/* 🎙️ Asistente Conversacional */}
       <main className="p-6 flex flex-col items-center">
-  <div className={`w-full max-w-screen-xl rounded-xl shadow-lg p-6 ${modoOscuro ? "bg-gray-800 text-gray-100" : "bg-white text-gray-800"}`}>
-    <div className="flex items-center justify-center gap-2 mb-4">
-      <span className="text-2xl">🤖</span>
-      <h2 className="text-xl font-semibold text-center">Asistente Conversacional</h2>
-    </div>
-    <VoiceAssistant />
-  </div>
-</main>
-
+        <div className={`w-full max-w-screen-xl rounded-xl shadow-lg p-6 ${modoOscuro ? "bg-gray-800 text-gray-100" : "bg-white text-gray-800"}`}>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="text-2xl">🤖</span>
+            <h2 className="text-xl font-semibold text-center">Asistente Conversacional</h2>
+          </div>
+          <VoiceAssistant />
+        </div>
+      </main>
 
       {/* 🗺️ Mapa como ventana flotante tipo push */}
       {mostrarMapa && (
@@ -112,12 +108,10 @@ export default function PanelAdmin() {
 
       {/* 🔁 Mensaje IA */}
       {mensajeIA && (
-  <div className="fixed top-6 right-6 z-50 bg-purple-600 text-white px-4 py-2 rounded shadow-lg animate-fade-in">
-    {mensajeIA}
-  </div>
-)}
-
-
+        <div className="fixed top-6 right-6 z-50 bg-purple-600 text-white px-4 py-2 rounded shadow-lg animate-fade-in">
+          {mensajeIA}
+        </div>
+      )}
     </div>
   );
 }

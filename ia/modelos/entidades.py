@@ -279,7 +279,36 @@ def extraer_entidades(texto):
 
     if re.search(r"(qué\s+ruta\s+le\s+toc(a|ó)|ruta\s+para\s+zona)", texto):
         entidades["intencion_forzada"] = "asignar_ruta"
+        
+    if re.search(r"asignar ruta.*pedido\s+\d+", texto):
+        entidades["intencion_forzada"] = "asignar_ruta"
+        match = re.search(r"pedido\s+(\d+)", texto)
+        if match:
+            entidades["pedido_id"] = int(match.group(1))
 
+    # Dirección completa desde voz
+    match_dir = re.search(r"(zona\s+\d+\s+[a-záéíóúñ\s]+)", texto)
+    if match_dir:
+        entidades["direccion"] = match_dir.group(1).strip()
+        
+    if re.search(r"(cancelar|anular)\s+ruta\s+(del\s+)?pedido\s+\d+", texto):
+        entidades["intencion_forzada"] = "cancelar_ruta"
+        match = re.search(r"pedido\s+(\d+)", texto)
+        if match:
+            entidades["pedido_id"] = int(match.group(1))
+
+    if re.search(r"(cómo\s+va\s+mi\s+pedido|estado\s+de\s+mi\s+pedido)", texto):
+        entidades["intencion_forzada"] = "ver_ruta"
+        match = re.search(r"pedido\s+(\d+)", texto)
+        if match:
+            entidades["pedido_id"] = int(match.group(1))
+
+        
+    if re.search(r"(reprogramar|cambiar)\s+ruta\s+(del\s+)?pedido\s+\d+", texto):
+        entidades["intencion_forzada"] = "reprogramar_ruta"
+        match = re.search(r"pedido\s+(\d+)", texto)
+        if match:
+            entidades["pedido_id"] = int(match.group(1))
 
 
     # 🧠 Intención forzada (por contexto)
@@ -326,7 +355,20 @@ def extraer_entidades(texto):
     if "direccion" in entidades and "intencion_forzada" not in entidades:
         if "ruta" in texto:
             entidades["intencion_forzada"] = "asignar_ruta"
-
+    if "ver rutas" in texto:
+        entidades["intencion_forzada"] = "ver_rutas"
+    if "ver rutas" in texto or "mostrar rutas" in texto or "consultar rutas" in texto:
+        entidades["intencion_forzada"] = "ver_rutas"
+    if "ver ruta del pedido" in texto or "consultar ruta del pedido" in texto or "mostrar ruta del pedido" in texto:
+        entidades["intencion_forzada"] = "ver_ruta"
+    if "rastrear ruta" in texto or "seguimiento del pedido" in texto or "por dónde va el pedido" in texto:
+        entidades["intencion_forzada"] = "ver_ruta"
+    if "cómo va mi pedido" in texto or "estado de mi pedido" in texto or "ruta actual del pedido" in texto:
+        entidades["intencion_forzada"] = "ver_ruta"
+    if "cancelar ruta" in texto or "anular ruta" in texto or "detener ruta" in texto:
+        entidades["intencion_forzada"] = "cancelar_ruta"
+    if "reprogramar ruta" in texto or "cambiar ruta" in texto or "modificar ruta" in texto or "ajustar ruta" in texto:
+        entidades["intencion_forzada"] = "reprogramar_ruta"
 
 
     return entidades

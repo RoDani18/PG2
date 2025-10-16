@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
+from Voz_Asistente import rutas
 from Voz_Asistente.rutas import asignar_ruta, actualizar_ruta, seguimiento_ruta_cliente, rutas_por_pedido, calcular_ruta_gps,obtener_coordenadas
 from backend import models
 import openrouteservice
@@ -27,6 +28,7 @@ def rutas_por_pedido(
     pedido = db.query(models.Pedido).filter_by(id=pedido_id).first()
     if not pedido:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
+
 
     # 📦 Consultar rutas asociadas
     return db.query(models.Ruta).filter(models.Ruta.pedido_id == pedido_id).all()
@@ -95,17 +97,15 @@ def reprogramar_ruta(
     db: Session = Depends(get_db),
     user=Depends(require_roles("empleado", "admin"))
 ):
-    ruta = db.query(models.Ruta).filter(models.Ruta.id == ruta_id).first()
+    ruta = db.query(models.Ruta).filter_by(id=ruta_id).first()
     if not ruta:
-        raise HTTPException(status_code=404, detail="Ruta no encontrada")
-    if ruta.estado == "cancelada":
-        raise HTTPException(status_code=400, detail="No se puede reprogramar una ruta cancelada")
-
+        raise HTTPException(404, "Ruta no encontrada")
     ruta.destino = datos.nuevo_destino
     ruta.tiempo_estimado = datos.nuevo_tiempo
     ruta.estado = "reprogramada"
     db.commit()
     return {"mensaje": f"Ruta {ruta_id} reprogramada correctamente"}
+
 
 ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YWVkNWE2MmY3MDQ3NzI5OGZlYWE4ZWU2ZTVkNGQ2IiwiaCI6Im11cm11cjY0In0="
 
@@ -154,3 +154,25 @@ def asignar_ruta_gps(data: RutaGPS):
         "lng": destino_coords[0],
         "ruta": ruta_formateada
     }
+
+@router.put("/{ruta_id}/cancelar")
+def cancelar_ruta(
+    ruta_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles("empleado", "admin"))
+):
+    ruta = db.query(models.Ruta).filter_by(id=ruta_id).first()
+    if not ruta:
+        raise HTTPException(404, "Ruta no encontrada")
+    ruta.estado = "cancelada"
+    db.commit()
+    return {"mensaje": f"Ruta {ruta_id} cancelada correctamente"}
+
+@router.get("/pedido/{pedido_id}/detalle_completo")
+def detalle_completo(pedido_id: int, db: Session = Depends(get_db)):
+    pedido = db.query(models.Pedido).filter_by(id=pedido_id).first()
+    rutas = db.query(models.Ruta).filter_by(pedido_id=pedido_id).all()
+    if not pedido:
+        raise HTTPException(404, "Pedido no encontrado")
+    return {"pedido": pedido, "ruta": rutas[-1] if rutas else None}
+

@@ -93,3 +93,15 @@ class RutaReprogramar(BaseModel):
 class PedidoConRuta(BaseModel):
     pedido: PedidoResponse
     ruta: RutaResponse
+
+class PedidoConUsuario(BaseModel):
+    id: int
+    producto: str
+    cantidad: int
+    estado: str
+    direccion: str
+    fecha: datetime
+    usuario: str 
+
+    class Config:
+        orm_mode = True

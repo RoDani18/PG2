@@ -430,26 +430,33 @@ if (command.toLowerCase().includes("consultar producto")) {
 
 
 
-// 📋 Ver mis pedidos
+// 📋 Ver pedidos (cliente ve los suyos, empleado/admin ve todos)
 if (command.includes("ver pedido")) {
   try {
-    const res = await axios.get("/pedidos/mios");
+    const endpoint = rol === "cliente" ? "/pedidos/mios" : "/pedidos";
+    const res = await axios.get(endpoint);
     const pedidos = res.data || [];
+
     const respuesta = pedidos.length
-      ? `📋 Tienes ${pedidos.length} pedidos:\n` +
-        pedidos.map(p => 
-  `• ID ${p.id} - Usuario: ${p.usuario} - Producto: ${p.producto} (${p.cantidad}) - Estado: ${p.estado} - Fecha: ${p.fecha} - Dirección: ${p.direccion}`
+      ? `📋 ${rol === "cliente" ? "Tienes" : "Pedidos registrados"}: ${pedidos.length}\n` +
+       pedidos.map(p =>
+  `• ID ${p.id} - Cliente: ${p.usuario} - Producto: ${p.producto} (${p.cantidad}) - Estado: ${p.estado} - Dirección: ${p.direccion}`
 ).join("\n")
-      : "📭 No tienes pedidos registrados.";
+
+      : rol === "cliente"
+        ? "📭 No tienes pedidos registrados."
+        : "📭 No hay pedidos registrados.";
+
     setHistorial([...historial, { tipo: "asistente", texto: respuesta }]);
     hablar(respuesta);
   } catch {
-    const error = "❌ Error al consultar tus pedidos.";
+    const error = "❌ Error al consultar pedidos.";
     setHistorial([...historial, { tipo: "asistente", texto: error }]);
     hablar(error);
   }
   return;
 }
+
 
 //Eliminar pedido
 try {
@@ -657,15 +664,43 @@ if (command.includes("descargar historial de pedidos")) {
 
 // ➕ Asignar ruta
 if (command.toLowerCase().includes("asignar ruta")) {
-  const pedidoId = prompt("📝 ID del pedido:");
-  const direccion = prompt("📍 Dirección de entrega:");
-  const confirmar = (mensaje) => {
-  return window.confirm(mensaje);
-};
+  const token = localStorage.getItem("token");
+  const resIA = await axios.post("/ia/probar-ia", { texto: command }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const pedidoId = resIA.data.entidades?.pedido_id;
+  const direccion = resIA.data.entidades?.direccion || "zona 6 5ta avenida 2-63 villa Nueva";
+
+  if (!pedidoId || !resIA.data.entidades?.direccion) {
+  const msg = "⚠️ No se detectaron datos por voz. Vamos a ingresarlos manualmente.";
+  setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
+  hablar(msg);
+
+  const manualId = prompt("📝 ID del pedido:");
+  const manualDir = prompt("📍 Dirección de entrega:");
+
+  if (!manualId || !manualDir) {
+    const cancelado = "❌ Asignación cancelada. Faltan datos.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: cancelado }]);
+    hablar(cancelado);
+    return;
+  }
+
+  // Reasignar variables
+  pedidoId = manualId;
+  direccion = manualDir;
+}
 
 
-  // 🧭 Capturar ubicación real
-  const usarUbicacion = confirmar("📍 ¿Usar tu ubicación actual como punto de partida?");
+  if (!pedidoId) {
+    const msg = "⚠️ No se detectó el ID del pedido.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
+    hablar(msg);
+    return;
+  }
+
+  const usarUbicacion = window.confirm("📍 ¿Usar tu ubicación actual como punto de partida?");
   let origen = [-90.5133, 14.6099]; // Default: San Miguel Petapa
 
   if (usarUbicacion && navigator.geolocation) {
@@ -673,42 +708,64 @@ if (command.toLowerCase().includes("asignar ruta")) {
       navigator.geolocation.getCurrentPosition((pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        localStorage.setItem("origen_lat", lat);
-        localStorage.setItem("origen_lng", lng);
-        origen = [lng, lat]; // Formato OpenRouteService: [lng, lat]
+        origen = [lng, lat];
         resolve();
-      }, () => resolve()); // Si falla, sigue con default
+      }, () => resolve());
     });
   }
+
+  // 🧠 Mostrar mensaje de carga antes de calcular
+  const mensajeCarga = `🧠 Procesando ruta para el pedido ${pedidoId} hacia ${direccion}...`;
+  setHistorial((prev) => [...prev, { tipo: "asistente", texto: mensajeCarga }]);
+  hablar(mensajeCarga);
 
   try {
     const res = await axios.post("/rutas/gps", {
       pedido_id: pedidoId,
       direccion,
       origen
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    const { distancia_km, tiempo_min, lat, lng, ruta } = res.data;
+    const { distancia_km, tiempo_min, lat, lng } = res.data;
 
-    const msg = `🚚 Ruta asignada al pedido ${pedidoId} hacia ${direccion}. 🛣️ Distancia: ${distancia_km} km | Tiempo estimado: ${tiempo_min} minutos.`;
+    // 🕒 Formato de tiempo refinado
+    const horas = Math.floor(tiempo_min / 60);
+    const minutos = Math.round(tiempo_min % 60);
+    const tiempoFormateado = horas > 0
+      ? `${horas} hora${horas > 1 ? "s" : ""} con ${minutos} minuto${minutos !== 1 ? "s" : ""}`
+      : `${minutos} minuto${minutos !== 1 ? "s" : ""}`;
+
+    // 🗺️ Confirmación de trazado
+    window.dispatchEvent(new Event("mostrarMapaRuta"));
+    window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
+
+    const mapaMsg = "🗺️ Ruta trazada en el mapa.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: mapaMsg }]);
+    hablar(mapaMsg);
+
+    // 🚚 Mensaje final limpio
+    console.log("✅ Ruta calculada correctamente"); // en lugar de mostrar res.data
+    const msg = `🚚 Ruta asignada al pedido ${pedidoId} hacia ${direccion}. 🛣️ Distancia: ${distancia_km} km | Tiempo estimado: ${tiempoFormateado}.`;
     setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
     hablar(msg);
 
     localStorage.setItem("lat", lat);
     localStorage.setItem("lng", lng);
     localStorage.setItem("destino", direccion);
-    localStorage.setItem("tiempo", `${tiempo_min} minutos`);
-    localStorage.setItem("ruta", JSON.stringify(ruta));
+    localStorage.setItem("tiempo", tiempoFormateado);
+    localStorage.setItem("ruta", JSON.stringify(res.data.ruta)); // se guarda pero no se muestra
 
-    window.dispatchEvent(new Event("mostrarMapaRuta"));
-    window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
   } catch {
     const error = "❌ Error al asignar ruta GPS.";
     setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
     hablar(error);
   }
+
   return;
 }
+
 
 
 if (command.toLowerCase().includes("asignar ruta manual")) {
@@ -738,17 +795,26 @@ if (command.toLowerCase().includes("rastrear ruta")) {
     if (!rutas.length) throw new Error("No hay rutas");
 
     const ruta = rutas.at(-1); // última ruta
-    const msg = `🧭 El repartidor va por ${ruta.destino} y llegará en ${ruta.tiempo_estimado}. Estado: ${ruta.estado}.`;
+    const tiempoMin = parseFloat(ruta.tiempo_estimado);
+    const horas = Math.floor(tiempoMin / 60);
+    const minutos = Math.round(tiempoMin % 60);
+    const tiempoFormateado = horas > 0
+      ? `${horas} hora${horas > 1 ? "s" : ""} con ${minutos} minuto${minutos !== 1 ? "s" : ""}`
+      : `${minutos} minuto${minutos !== 1 ? "s" : ""}`;
+
+    const msg = `🧭 El repartidor va por ${ruta.destino} y llegará en ${tiempoFormateado}. Estado: ${ruta.estado}.`;
     setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
     hablar(msg);
 
-    localStorage.setItem("lat", ruta.lat_actual);
-    localStorage.setItem("lng", ruta.lng_actual);
-    localStorage.setItem("destino", ruta.destino);
-    localStorage.setItem("estado", ruta.estado);
-    localStorage.setItem("tiempo", ruta.tiempo_estimado);
-    window.dispatchEvent(new Event("mostrarMapaRuta"));
-    window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
+    if (ruta.lat_actual && ruta.lng_actual) {
+      localStorage.setItem("lat", ruta.lat_actual);
+      localStorage.setItem("lng", ruta.lng_actual);
+      localStorage.setItem("destino", ruta.destino);
+      localStorage.setItem("estado", ruta.estado);
+      localStorage.setItem("tiempo", tiempoFormateado);
+      window.dispatchEvent(new Event("mostrarMapaRuta"));
+      window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
+    }
   } catch {
     const error = "❌ Error al consultar seguimiento.";
     setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
@@ -760,6 +826,7 @@ if (command.toLowerCase().includes("rastrear ruta")) {
 // 🗑️ Cancelar ruta
 if (command.toLowerCase().includes("cancelar ruta")) {
   const rutaId = prompt("🗑️ ID de la ruta:");
+  if (!rutaId || !window.confirm(`¿Seguro que deseas cancelar la ruta ${rutaId}?`)) return;
   try {
     await axios.put(`/rutas/${rutaId}/cancelar`);
     const msg = `🗑️ Ruta ${rutaId} cancelada correctamente.`;
@@ -778,6 +845,12 @@ if (command.toLowerCase().includes("reprogramar ruta")) {
   const rutaId = prompt("🔁 ID de la ruta:");
   const nuevoDestino = prompt("📍 Nuevo destino:");
   const nuevoTiempo = prompt("⏱️ Nuevo tiempo estimado:");
+  if (!rutaId || !nuevoDestino || !nuevoTiempo) {
+    const error = "⚠️ Faltan datos para reprogramar la ruta.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+    return;
+  }
   try {
     await axios.put(`/rutas/${rutaId}/reprogramar`, {
       nuevo_destino: nuevoDestino,
@@ -794,6 +867,7 @@ if (command.toLowerCase().includes("reprogramar ruta")) {
   return;
 }
 
+// 📦 ¿Cómo va mi pedido?
 if (command.toLowerCase().includes("cómo va mi pedido")) {
   const pedidoId = prompt("📦 ID del pedido:");
   try {
@@ -801,19 +875,24 @@ if (command.toLowerCase().includes("cómo va mi pedido")) {
     const { pedido, ruta } = res.data;
 
     let frase;
-
     if (!ruta) {
       frase = `📦 Pedido ${pedido.id} de ${pedido.cantidad} unidad(es) de ${pedido.producto} hacia ${pedido.direccion}. Estado del pedido: ${pedido.estado}. 🧭 No hay ruta asignada aún.`;
     } else {
-      frase = `📦 Pedido ${pedido.id} de ${pedido.cantidad} unidad(es) de ${pedido.producto} hacia ${pedido.direccion}. Estado del pedido: ${pedido.estado}. 🧭 Ruta: ${ruta.estado}, destino ${ruta.destino}, tiempo estimado ${ruta.tiempo_estimado}.`;
+      const tiempoMin = parseFloat(ruta.tiempo_estimado);
+      const horas = Math.floor(tiempoMin / 60);
+      const minutos = Math.round(tiempoMin % 60);
+      const tiempoFormateado = horas > 0
+        ? `${horas} hora${horas > 1 ? "s" : ""} con ${minutos} minuto${minutos !== 1 ? "s" : ""}`
+        : `${minutos} minuto${minutos !== 1 ? "s" : ""}`;
 
-      // Mostrar mapa si hay coordenadas
+      frase = `📦 Pedido ${pedido.id} de ${pedido.cantidad} unidad(es) de ${pedido.producto} hacia ${pedido.direccion}. Estado del pedido: ${pedido.estado}. 🧭 Ruta: ${ruta.estado}, destino ${ruta.destino}, tiempo estimado ${tiempoFormateado}.`;
+
       if (ruta.lat_actual && ruta.lng_actual) {
         localStorage.setItem("lat", ruta.lat_actual);
         localStorage.setItem("lng", ruta.lng_actual);
         localStorage.setItem("destino", ruta.destino);
         localStorage.setItem("estado", ruta.estado);
-        localStorage.setItem("tiempo", ruta.tiempo_estimado);
+        localStorage.setItem("tiempo", tiempoFormateado);
         window.dispatchEvent(new Event("mostrarMapaRuta"));
         window.dispatchEvent(new Event("abrirMapaDesdeAsistente"));
       }
@@ -823,6 +902,26 @@ if (command.toLowerCase().includes("cómo va mi pedido")) {
     hablar(frase);
   } catch {
     const error = "❌ No se pudo consultar el estado del pedido.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
+    hablar(error);
+  }
+  return;
+}
+
+// 📍 Ver rutas generales
+if (command.toLowerCase().includes("ver rutas")) {
+  try {
+    const res = await axios.get("/rutas");
+    const rutas = res.data;
+    const msg = rutas.length
+      ? "📍 Rutas activas:\n" + rutas.map(r =>
+          `- Pedido ${r.pedido_id} hacia ${r.destino} | Estado: ${r.estado} | Tiempo: ${r.tiempo_estimado || "sin tiempo"}`
+        ).join("\n")
+      : "📭 No hay rutas registradas.";
+    setHistorial((prev) => [...prev, { tipo: "asistente", texto: msg }]);
+    hablar(msg);
+  } catch {
+    const error = "❌ No se pudo consultar las rutas.";
     setHistorial((prev) => [...prev, { tipo: "asistente", texto: error }]);
     hablar(error);
   }

@@ -3,18 +3,33 @@ from sqlalchemy.orm import Session
 from typing import List
 from backend import models
 from backend.auth.deps import get_db, require_roles, get_current_user
-from backend.routers.schemas_pedidos import MovimientoInventarioResponse, PedidoConRuta, PedidoCreate, PedidoUpdate, PedidoResponse
+from backend.routers.schemas_pedidos import MovimientoInventarioResponse, PedidoConRuta, PedidoConUsuario, PedidoCreate, PedidoUpdate, PedidoResponse
 import logging
 from backend.routers.schemas_pedidos import PedidoResumen
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.get("/", response_model=List[PedidoResponse])
+@router.get("/", response_model=List[PedidoConUsuario])
 def listar_todos(
     db: Session = Depends(get_db),
     user=Depends(require_roles("empleado", "admin"))
 ):
-    return db.query(models.Pedido).all()
+    pedidos = db.query(models.Pedido).all()
+    respuesta = []
+    for p in pedidos:
+        nombre_usuario = p.usuario.username if p.usuario else "desconocido"
+        resumen = PedidoConUsuario(
+            id=p.id,
+            producto=p.producto,
+            cantidad=p.cantidad,
+            estado=p.estado,
+            direccion=p.direccion,
+            fecha=p.fecha,
+            usuario=nombre_usuario
+        )
+        respuesta.append(resumen)
+    return respuesta
+
 
 @router.get("/mios", response_model=List[PedidoResumen])
 def listar_mios(

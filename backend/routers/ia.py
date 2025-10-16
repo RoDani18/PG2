@@ -321,12 +321,24 @@ def ejecutar_comando(
             pedido_id = entidades.get("pedido_id")
             if not pedido_id:
                 return {"respuesta": "⚠️ No se detectó el ID del pedido para consultar la ruta."}
-
             if user.rol not in ["admin", "empleado", "cliente"]:
                 return {"respuesta": "⚠️ Solo clientes, empleados o administradores pueden consultar rutas."}
-
             from Voz_Asistente import rutas
-            return {"respuesta": rutas.resumen_ruta_pedido(pedido_id, token)}
+            return {"respuesta": rutas.rutas_por_pedido(pedido_id, token)}
+        
+        elif intencion == "reprogramar_ruta":
+            pedido_id = entidades.get("pedido_id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido para reprogramar la ruta."}
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo empleados o administradores pueden reprogramar rutas."}
+            nuevo_destino = entidades.get("direccion")
+            nuevo_tiempo = entidades.get("tiempo_estimado")
+            if not nuevo_destino or not nuevo_tiempo:
+                return {"respuesta": "⚠️ Faltan datos para reprogramar la ruta (destino o tiempo)."}
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.actualizar_ruta(pedido_id, destino=nuevo_destino, tiempo_estimado=nuevo_tiempo, estado="reprogramada", token=token)}
+
         
         elif intencion == "asignar_ruta":
             if user.rol not in ["admin", "empleado"]:
@@ -338,7 +350,28 @@ def ejecutar_comando(
 
             from Voz_Asistente import rutas
             return {"respuesta": rutas.asignar_ruta_por_direccion(direccion, token)}
+        elif intencion == "ver_rutas":
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo empleados o administradores pueden ver todas las rutas."}
+            
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.consultar_rutas(token)}
 
+        elif intencion == "cancelar_ruta":
+            pedido_id = entidades.get("pedido_id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido para cancelar la ruta."}
+            if user.rol not in ["admin", "empleado"]:
+                return {"respuesta": "⚠️ Solo empleados o administradores pueden cancelar rutas."}
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.cancelar_ruta(pedido_id, token)}
+
+        elif intencion == "ver_ruta":
+            pedido_id = entidades.get("pedido_id")
+            if not pedido_id:
+                return {"respuesta": "⚠️ No se detectó el ID del pedido para consultar la ruta."}
+            from Voz_Asistente import rutas
+            return {"respuesta": rutas.rutas_por_pedido(pedido_id, token)}
 
         else:
             return {"respuesta": f"⚠️ Intención '{intencion}' no ejecutable."}
